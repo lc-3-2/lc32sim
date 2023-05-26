@@ -26,8 +26,9 @@ void initialize_memory(Memory &mem) {
     }
 }
 
-Simulator sim(42);
 int main(int argc, char *argv[]) {
+    unique_ptr<Simulator> simptr = make_unique<Simulator>(42);
+    Simulator &sim = *simptr;
     initialize_memory(sim.mem);
     sim.launch_sim_thread();
     while (sim.running) {

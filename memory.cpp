@@ -5,12 +5,10 @@
 
 namespace lc32sim {
     Memory::Page::Page() : data(nullptr) {}
-    Memory::Page::~Page() {
-        delete[] this->data;
-    }
+    Memory::Page::~Page() {}
 
     void Memory::Page::init(unsigned int seed) {
-        this->data = new uint8_t[PAGE_SIZE];
+        this->data = std::make_unique_for_overwrite<uint8_t[]>(PAGE_SIZE);
         srand(seed);
         for (uint64_t i = 0; i < PAGE_SIZE; i++) {
             data[i] = static_cast<uint8_t>(rand());
