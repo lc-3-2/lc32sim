@@ -14,15 +14,9 @@ namespace lc32sim {
 
     class Memory {
         private:
-            struct Page {
-                std::unique_ptr<uint8_t[]> data;
-                Page();
-                ~Page();
-                void init(unsigned int seed);
-                bool is_initialized() const;
-            };
-            Page pages[NUM_PAGES];
+            bool page_initialized[NUM_PAGES];
             unsigned int seed;
+            std::unique_ptr<uint8_t[]> data;
             void init_page(uint32_t page_num);
         public:
             Memory(unsigned int seed);
@@ -31,11 +25,7 @@ namespace lc32sim {
 
             void set_seed(unsigned int seed);
 
-            uint8_t read_byte(uint32_t addr);
-            uint16_t read_half(uint32_t addr);
-            uint32_t read_word(uint32_t addr);
-            void write_byte(uint32_t addr, uint8_t data);
-            void write_half(uint32_t addr, uint16_t data);
-            void write_word(uint32_t addr, uint32_t data);
+            template<typename T> T read(uint32_t addr);
+            template<typename T> void write(uint32_t addr, T val);
     };
 }

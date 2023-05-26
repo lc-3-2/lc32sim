@@ -54,7 +54,6 @@ namespace lc32sim {
             void parse_arithmetic_instruction(uint16_t instruction_bits);
             void parse_load_instruction(uint16_t instruction_bits);
             void parse_store_instruction(uint16_t instruction_bits);
-            template<typename T> uint32_t sext(T val, int bits);
         public:
             InstructionType type;
             InstructionData data;

@@ -5,6 +5,7 @@
 #include "exceptions.hpp"
 #include "instruction.hpp"
 #include "sim.hpp"
+#include "utils.hpp"
 
 namespace lc32sim {
     Simulator::Simulator(unsigned int seed) : running(false), pc(0x3000), mem() {
@@ -38,7 +39,7 @@ namespace lc32sim {
         Instruction i;
         while (this->running) {
             // FETCH/DECODE
-            i = Instruction(mem.read_half(pc));
+            i = Instruction(mem.read<uint16_t>(pc));
             pc += 2;
 
             // EXECUTE
@@ -71,15 +72,15 @@ namespace lc32sim {
                     pc = regs[i.data.jsrr.baseR];
                     break;
                 case InstructionType::LDB:
-                    regs[i.data.load.dr] = mem.read_byte(regs[i.data.load.baseR] + i.data.load.offset6);
+                    regs[i.data.load.dr] = sext<8, 32>(mem.read<uint8_t>(regs[i.data.load.baseR] + i.data.load.offset6));
                     setcc(regs[i.data.load.dr]);
                     break;
                 case InstructionType::LDH:
-                    regs[i.data.load.dr] = mem.read_half(regs[i.data.load.baseR] + (i.data.load.offset6 * 2));
+                    regs[i.data.load.dr] = sext<16, 32>(mem.read<uint16_t>(regs[i.data.load.baseR] + (i.data.load.offset6 * 2)));
                     setcc(regs[i.data.load.dr]);
                     break;
                 case InstructionType::LDW:
-                    regs[i.data.load.dr] = mem.read_word(regs[i.data.load.baseR] + (i.data.load.offset6 * 4));
+                    regs[i.data.load.dr] = mem.read<uint32_t>(regs[i.data.load.baseR] + (i.data.load.offset6 * 4));
                     setcc(regs[i.data.load.dr]);
                     break;
                 case InstructionType::LEA:
@@ -106,13 +107,13 @@ namespace lc32sim {
                     setcc(regs[i.data.shift.dr]);
                     break;
                 case InstructionType::STB:
-                    mem.write_byte(regs[i.data.store.baseR] + i.data.store.offset6, regs[i.data.store.sr]);
+                    mem.write<uint8_t>(regs[i.data.store.baseR] + i.data.store.offset6, static_cast<uint8_t>(regs[i.data.store.sr]));
                     break;
                 case InstructionType::STH:
-                    mem.write_half(regs[i.data.store.baseR] + (i.data.store.offset6 * 2), regs[i.data.store.sr]);
+                    mem.write<uint16_t>(regs[i.data.store.baseR] + (i.data.store.offset6 * 2), static_cast<uint16_t>(regs[i.data.store.sr]));
                     break;
                 case InstructionType::STW:
-                    mem.write_word(regs[i.data.store.baseR] + (i.data.store.offset6 * 4), regs[i.data.store.sr]);
+                    mem.write<uint32_t>(regs[i.data.store.baseR] + (i.data.store.offset6 * 4), static_cast<uint32_t>(regs[i.data.store.sr]));
                     break;
                 case InstructionType::TRAP:
                     if (i.data.trap.trapvect8 == 0x25) {

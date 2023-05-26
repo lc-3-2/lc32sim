@@ -6,21 +6,9 @@
 using endian = std::endian;
 
 namespace lc32sim {
-    Memory::Page::Page() : data(nullptr) {}
-    Memory::Page::~Page() {}
-
-    void Memory::Page::init(unsigned int seed) {
-        this->data = std::make_unique_for_overwrite<uint8_t[]>(PAGE_SIZE);
-        srand(seed);
-        for (uint64_t i = 0; i < PAGE_SIZE; i++) {
-            data[i] = static_cast<uint8_t>(rand());
-        }
-    }
-    bool Memory::Page::is_initialized() const {
-        return this->data != nullptr;
-    }
-
-    Memory::Memory(unsigned int seed) : pages(), seed(seed) {};
+    Memory::Memory(unsigned int seed) : page_initialized(), seed(seed) {
+        data = std::make_unique_for_overwrite<uint8_t[]>(MEM_SIZE);
+    };
     Memory::Memory() : Memory(0) {}
     Memory::~Memory() {}
 
@@ -29,94 +17,49 @@ namespace lc32sim {
     }
 
     void Memory::init_page(uint32_t page_num) {
-        this->pages[page_num].init(this->seed ^ page_num);
+        srand(seed ^ page_num);
+        for (uint64_t i = 0; i < PAGE_SIZE; i++) {
+            data[i] = static_cast<uint8_t>(rand());
+        }
+        page_initialized[page_num] = true;
     }
-    uint8_t Memory::read_byte(uint32_t addr) {
+    template<typename T> T Memory::read(uint32_t addr) {
         uint32_t page_num = addr / PAGE_SIZE;
-        uint32_t page_offset = addr % PAGE_SIZE;
-        if (!this->pages[page_num].is_initialized()) {
+        if constexpr (sizeof(T) > 1) {
+            if (addr % sizeof(T) != 0) {
+                throw UnalignedMemoryAccessException(addr, sizeof(T));
+            }
+        }
+        if (!this->page_initialized[page_num]) {
             this->init_page(page_num);
         }
-        return this->pages[page_num].data[page_offset];
-    }
-    uint16_t Memory::read_half(uint32_t addr) {
-        uint32_t page_num = addr / PAGE_SIZE;
-        uint32_t page_offset = addr % PAGE_SIZE;
-        if (addr % 2 != 0) {
-            throw UnalignedMemoryAccessException(addr, 2);
-        }
-        if (!this->pages[page_num].is_initialized()) {
-            this->init_page(page_num);
-        }
-        uint16_t ret = *reinterpret_cast<uint16_t*>(&this->pages[page_num].data[page_offset]);
-        if constexpr(endian::native == endian::big) {
+        T ret = *reinterpret_cast<T*>(&this->data[addr]);
+        if constexpr(sizeof(T) > 1 && endian::native == endian::big) {
             return std::byteswap(ret);
         } else {
             return ret;
         }
     }
-    uint32_t Memory::read_word(uint32_t addr) {
+    template <typename T> void Memory::write(uint32_t addr, T val) {
         uint32_t page_num = addr / PAGE_SIZE;
-        uint32_t page_offset = addr % PAGE_SIZE;
-        if (addr % 4 != 0) {
-            throw UnalignedMemoryAccessException(addr, 4);
+        if constexpr (sizeof(T) > 1) {
+            if (addr % sizeof(T) != 0) {
+                throw UnalignedMemoryAccessException(addr, sizeof(T));
+            }
         }
-        if (!this->pages[page_num].is_initialized()) {
-            this->init_page(page_num);
-        }
-        uint32_t ret = *reinterpret_cast<uint32_t*>(&this->pages[page_num].data[page_offset]);
-        if constexpr(endian::native == endian::big) {
-            return std::byteswap(ret);
-        } else {
-            return ret;
-        }   
-    }
-    void Memory::write_byte(uint32_t addr, uint8_t data) {
-        uint32_t page_num = addr / PAGE_SIZE;
-        uint32_t page_offset = addr % PAGE_SIZE;
-        if (!this->pages[page_num].is_initialized()) {
-            this->init_page(page_num);
-        }
-        if (addr < IO_SPACE_ADDR) {
-            this->pages[page_num].data[page_offset] = data;
-        } else {
-            *reinterpret_cast<volatile uint8_t*>(&this->pages[page_num].data[page_offset]) = data;
-        }
-    }
-    void Memory::write_half(uint32_t addr, uint16_t data) {
-        uint32_t page_num = addr / PAGE_SIZE;
-        uint32_t page_offset = addr % PAGE_SIZE;
-        if (addr % 2 != 0) {
-            throw UnalignedMemoryAccessException(addr, 2);
-        }
-        if (!this->pages[page_num].is_initialized()) {
+        if (this->page_initialized[page_num]) {
             this->init_page(page_num);
         }
         if constexpr (endian::native == endian::big) {
-            data = std::byteswap(data);
+            val = std::byteswap(val);
         }
-        if (addr < IO_SPACE_ADDR) {
-            *reinterpret_cast<uint16_t*>(&this->pages[page_num].data[page_offset]) = data;
-        } else {
-            *reinterpret_cast<volatile uint16_t*>(&this->pages[page_num].data[page_offset]) = data;
-        }
+        *reinterpret_cast<T*>(&this->data[addr]) = val;
     }
-    void Memory::write_word(uint32_t addr, uint32_t data) {
-        uint32_t page_num = addr / PAGE_SIZE;
-        uint32_t page_offset = addr % PAGE_SIZE;
-        if (addr % 4 != 0) {
-            throw UnalignedMemoryAccessException(addr, 4);
-        }
-        if (!this->pages[page_num].is_initialized()) {
-            this->init_page(page_num);
-        }
-        if constexpr (endian::native == endian::big) {
-            data = std::byteswap(data);
-        }
-        if (addr < IO_SPACE_ADDR) {
-            *reinterpret_cast<uint32_t*>(&this->pages[page_num].data[page_offset]) = data;
-        } else {
-            *reinterpret_cast<volatile uint32_t*>(&this->pages[page_num].data[page_offset]) = data;
-        }
-    }
+
+    template uint8_t Memory::read<uint8_t>(uint32_t addr);
+    template uint16_t Memory::read<uint16_t>(uint32_t addr);
+    template uint32_t Memory::read<uint32_t>(uint32_t addr);
+    template void Memory::write<uint8_t>(uint32_t addr, uint8_t val);
+    template void Memory::write<uint16_t>(uint32_t addr, uint16_t val);
+    template void Memory::write<uint32_t>(uint32_t addr, uint32_t val);
 }

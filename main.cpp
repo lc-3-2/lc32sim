@@ -22,7 +22,7 @@ uint32_t program[] = {
 };
 void initialize_memory(Memory &mem) {
     for (unsigned i = 0; i < sizeof(program)/sizeof(program[0]); i++) {
-        mem.write_half(0x3000 + (i * 2), program[i]);
+        mem.write<uint16_t>(0x3000 + (i * 2), program[i]);
     }
 }
 

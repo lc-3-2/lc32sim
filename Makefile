@@ -16,13 +16,16 @@ endif
 SRCFILES:=$(wildcard *.c)
 SRCFILES+=$(wildcard *.cpp)
 
+HEADERFILES:=$(wildcard *.h)
+HEADERFILES+=$(wildcard *.hpp)
+
 .DEFAULT_GOAL := sim
 .PHONY: clean
 
 run: sim
 	./${SIM}
 	
-sim: ${SRCFILES}
+sim: ${SRCFILES} ${HEADERFILES}
 	${CC} ${FLAGS} ${CFLAGS} ${SRCFILES} -o ${SIM}
 
 clean: 

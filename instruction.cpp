@@ -1,5 +1,6 @@
 #include "exceptions.hpp"
 #include "instruction.hpp"
+#include "utils.hpp"
 
 namespace lc32sim {
     Instruction::Instruction() {}
@@ -19,7 +20,7 @@ namespace lc32sim {
             case 0b0000:
                 this->type = InstructionType::BR;
                 this->data.br.cond = (instruction_bits & 0x0E00) >> 9;
-                this->data.br.pcoffset9 = sext(instruction_bits & 0x01FF, 9);
+                this->data.br.pcoffset9 = sext<9, 32>(instruction_bits & 0x01FF);
                 break;
             case 0b1100:
                 this->type = InstructionType::JMP;
@@ -29,7 +30,7 @@ namespace lc32sim {
                 bool bit11 = instruction_bits & 0x0800;
                 if (bit11) {
                     this->type = InstructionType::JSR;
-                    this->data.jsr.pcoffset11 = sext(instruction_bits & 0x07FF, 11);
+                    this->data.jsr.pcoffset11 = sext<11, 32>(instruction_bits & 0x07FF);
                 } else {
                     this->type = InstructionType::JSRR;
                     this->data.jsrr.baseR = (instruction_bits & 0x01C0) >> 6;
@@ -51,7 +52,7 @@ namespace lc32sim {
             case 0b1110:
                 this->type = InstructionType::LEA;
                 this->data.lea.dr = (instruction_bits & 0x0E00) >> 9;
-                this->data.lea.pcoffset9 = sext(instruction_bits & 0x01FF, 9);
+                this->data.lea.pcoffset9 = sext<9, 32>(instruction_bits & 0x01FF);
                 break;
             case 0b1000:
                 this->type = InstructionType::RTI;
@@ -111,7 +112,7 @@ namespace lc32sim {
         this->data.arithmetic.sr1 = (instruction_bits & 0x01C0) >> 6;
         this->data.arithmetic.imm = instruction_bits & 0x0020;
         if (this->data.arithmetic.imm) {
-            this->data.arithmetic.imm5 = sext(instruction_bits & 0x001F, 5);
+            this->data.arithmetic.imm5 = sext<5, 32>(instruction_bits & 0x001F);
         } else {
             this->data.arithmetic.sr2 = instruction_bits & 0x0007;
         }
@@ -119,19 +120,11 @@ namespace lc32sim {
     void Instruction::parse_load_instruction(uint16_t instruction_bits) {
         this->data.load.dr = (instruction_bits & 0x0E00) >> 9;
         this->data.load.baseR = (instruction_bits & 0x01C0) >> 6;
-        this->data.load.offset6 = sext(instruction_bits & 0x003F, 6);
+        this->data.load.offset6 = sext<6, 32>(instruction_bits & 0x003F);
     }
     void Instruction::parse_store_instruction(uint16_t instruction_bits) {
         this->data.store.sr = (instruction_bits & 0x0E00) >> 9;
         this->data.store.baseR = (instruction_bits & 0x01C0) >> 6;
-        this->data.store.offset6 = sext(instruction_bits & 0x003F, 6);
-    }
-    template<typename T> uint32_t Instruction::sext(T val, int bits) {
-        uint32_t ret = static_cast<uint32_t>(val);
-        T sign_bit = static_cast<T>(1) << (bits - 1);
-        if (ret & sign_bit) {
-            ret |= static_cast<T>(-1) << bits;
-        }
-        return ret;
+        this->data.store.offset6 = sext<6, 32>(instruction_bits & 0x003F);
     }
 }
