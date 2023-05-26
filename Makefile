@@ -1,7 +1,7 @@
 RM        := /bin/rm -rf
 SIM       := sim
 CC        := g++
-CFLAGS    := -std=c++20 -lz -lm -W -Wall -Wno-deprecated -Wno-unknown-warning-option -Wno-self-assign -Wno-unused-parameter -Wno-unused-but-set-variable -Wold-style-cast
+CFLAGS    := -std=c++23 -lz -lm -W -Wall -Wno-deprecated -Wno-unknown-warning-option -Wno-self-assign -Wno-unused-parameter -Wno-unused-but-set-variable -Wold-style-cast
 FASTFLAGS := -ggdb3 -march=native -O3 -frename-registers
 DBGFLAGS  := -ggdb3 -O0
 

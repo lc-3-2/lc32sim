@@ -3,6 +3,8 @@
 #include "exceptions.hpp"
 #include "memory.hpp"
 
+using endian = std::endian;
+
 namespace lc32sim {
     Memory::Page::Page() : data(nullptr) {}
     Memory::Page::~Page() {}
@@ -46,7 +48,12 @@ namespace lc32sim {
         if (!this->pages[page_num].is_initialized()) {
             this->init_page(page_num);
         }
-        return *reinterpret_cast<uint16_t*>(&this->pages[page_num].data[page_offset]);
+        uint16_t ret = *reinterpret_cast<uint16_t*>(&this->pages[page_num].data[page_offset]);
+        if constexpr(endian::native == endian::big) {
+            return std::byteswap(ret);
+        } else {
+            return ret;
+        }
     }
     uint32_t Memory::read_word(uint32_t addr) {
         uint32_t page_num = addr / PAGE_SIZE;
@@ -57,7 +64,12 @@ namespace lc32sim {
         if (!this->pages[page_num].is_initialized()) {
             this->init_page(page_num);
         }
-        return *reinterpret_cast<uint32_t*>(&this->pages[page_num].data[page_offset]);
+        uint32_t ret = *reinterpret_cast<uint32_t*>(&this->pages[page_num].data[page_offset]);
+        if constexpr(endian::native == endian::big) {
+            return std::byteswap(ret);
+        } else {
+            return ret;
+        }   
     }
     void Memory::write_byte(uint32_t addr, uint8_t data) {
         uint32_t page_num = addr / PAGE_SIZE;
@@ -80,6 +92,9 @@ namespace lc32sim {
         if (!this->pages[page_num].is_initialized()) {
             this->init_page(page_num);
         }
+        if constexpr (endian::native == endian::big) {
+            data = std::byteswap(data);
+        }
         if (addr < IO_SPACE_ADDR) {
             *reinterpret_cast<uint16_t*>(&this->pages[page_num].data[page_offset]) = data;
         } else {
@@ -94,6 +109,9 @@ namespace lc32sim {
         }
         if (!this->pages[page_num].is_initialized()) {
             this->init_page(page_num);
+        }
+        if constexpr (endian::native == endian::big) {
+            data = std::byteswap(data);
         }
         if (addr < IO_SPACE_ADDR) {
             *reinterpret_cast<uint32_t*>(&this->pages[page_num].data[page_offset]) = data;

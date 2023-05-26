@@ -1,8 +1,10 @@
 #pragma once
+#include <bit>
 #include <cstdint>
 #include <memory>
 
 namespace lc32sim {
+    static_assert(std::endian::native == std::endian::little || std::endian::native == std::endian::big, "mixed-endian architectures are not supported");
     const uint64_t MEM_SIZE = 1ULL << 32;
     const uint64_t PAGE_SIZE = 1ULL << 12;
     static_assert(PAGE_SIZE % 4 == 0, "PAGE_SIZE must be a multiple of 4");
