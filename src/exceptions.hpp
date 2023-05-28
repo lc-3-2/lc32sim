@@ -22,6 +22,10 @@ namespace lc32sim {
                 "Address 0x" + int_to_hex(addr) + " is not " + std::to_string(alignment) + "-byte aligned"
             ) {}
     };
+    class ELFParsingException : public std::runtime_error {
+        public:
+            ELFParsingException(std::string msg) : std::runtime_error(msg) {}
+    };
     // class MalformedInstruction : public SimulatorException {
     //     public:
     //         MalformedInstruction(uint16_t instruction_bits, std::string msg) : SimulatorException(
