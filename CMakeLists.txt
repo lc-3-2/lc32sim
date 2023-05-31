@@ -4,11 +4,10 @@ project(lc32sim VERSION 0.1
 
 set(SOURCES
     src/display.cpp
-    src/elf_parser.cpp
+    src/elf_file.cpp
     src/instruction.cpp
     src/main.cpp
     src/memory.cpp
-    src/regfile.cpp
     src/sim.cpp
 )
 set(FLAGS
@@ -20,6 +19,7 @@ set(FLAGS
     -Wno-unused-parameter
     -Wno-unused-but-set-variable
     -Wold-style-cast
+    -Waddress-of-packed-member
 )
 set(RELEASE_FLAGS
     -O3

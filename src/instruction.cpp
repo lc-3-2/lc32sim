@@ -97,7 +97,7 @@ namespace lc32sim {
                 break;
             case 0b1111:
                 this->type = InstructionType::TRAP;
-                this->data.trap.trapvect8 = instruction_bits & 0x00FF;
+                this->data.trap.trapvect8 = static_cast<TrapVector>(instruction_bits & 0x00FF);
                 break;
             case 0b1001:
                 this->type = InstructionType::XOR;

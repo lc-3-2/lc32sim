@@ -6,7 +6,7 @@
 #include <string>
 
 namespace lc32sim {
-    template<typename T> inline std::string int_to_hex(T val) {
+    inline std::string int_to_hex(uint64_t val) {
         std::stringstream stream;
         stream << std::hex << val;
         return stream.str();

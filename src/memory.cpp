@@ -1,4 +1,6 @@
 #include <cstdlib>
+#include <iostream>
+#include <unordered_map>
 
 #include "exceptions.hpp"
 #include "memory.hpp"
@@ -56,10 +58,34 @@ namespace lc32sim {
         *reinterpret_cast<T*>(&this->data[addr]) = val;
     }
 
+    template char Memory::read<char>(uint32_t addr);
     template uint8_t Memory::read<uint8_t>(uint32_t addr);
     template uint16_t Memory::read<uint16_t>(uint32_t addr);
     template uint32_t Memory::read<uint32_t>(uint32_t addr);
     template void Memory::write<uint8_t>(uint32_t addr, uint8_t val);
     template void Memory::write<uint16_t>(uint32_t addr, uint16_t val);
     template void Memory::write<uint32_t>(uint32_t addr, uint32_t val);
+
+    void Memory::load_elf(ELFFile& elf) {
+        using namespace std;
+        cout << "Loading ELF file with " << dec << elf.get_header().phnum << " segments" << endl;
+        for (uint16_t i = 0; i < elf.get_header().phnum; i++) {
+            auto ph = elf.get_program_header(i);
+            if (ph.type == segment_type::LOADABLE) {
+                // Ensure that all the pages needed are loaded
+                uint32_t start_page = ph.vaddr / PAGE_SIZE;
+                uint32_t end_page = (ph.vaddr + ph.memsz - 1) / PAGE_SIZE;
+                for (uint32_t page = start_page; page <= end_page; page++) {
+                    if (!this->page_initialized[page]) {
+                        this->init_page(page);
+                    }
+                }
+                elf.read_chunk(&this->data[ph.vaddr], ph.offset, ph.filesz);
+
+                cout << "Loaded segment " << dec << i << " from file offset " << dec << ph.offset << " to memory address 0x" << hex << ph.vaddr << endl;
+            } else {
+                cout << "Skipping segment " << dec << i << " of type " << ph.type << endl;
+            }
+        }
+    }
 }

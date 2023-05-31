@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <memory>
 
+#include "elf_file.hpp"
+
 namespace lc32sim {
     static_assert(std::endian::native == std::endian::little || std::endian::native == std::endian::big, "mixed-endian architectures are not supported");
     const uint64_t MEM_SIZE = 1ULL << 32;
@@ -24,6 +26,7 @@ namespace lc32sim {
             ~Memory();
 
             void set_seed(unsigned int seed);
+            void load_elf(ELFFile& elf);
 
             template<typename T> T read(uint32_t addr);
             template<typename T> void write(uint32_t addr, T val);

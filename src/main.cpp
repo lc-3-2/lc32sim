@@ -1,13 +1,15 @@
 #include <bitset>
 #include <iostream>
 
+#include "elf_file.hpp"
+#include "instruction.hpp"
 #include "memory.hpp"
 #include "sim.hpp"
 
 using namespace lc32sim;
 using namespace std;
 
-uint32_t program[] = {
+[[maybe_unused]] uint32_t program[] = {
     /* 0x3000: AND R0, R0, 0  */  0x5020, // R0 = 0
     /* 0x3002: ADD R1, R0, 1  */  0x1221, // R1 = 1
     /* 0x3004: ADD R0, R0, 13 */  0x102D, // R0 = 13
@@ -20,24 +22,40 @@ uint32_t program[] = {
     /* 0x3012: .fill 0x1234   */  0x1234,
 
 };
-void initialize_memory(Memory &mem) {
+[[maybe_unused]] void initialize_memory(Memory &mem) {
     for (unsigned i = 0; i < sizeof(program)/sizeof(program[0]); i++) {
         mem.write<uint16_t>(0x3000 + (i * 2), program[i]);
     }
 }
 
 int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        cerr << "Usage: " << argv[0] << " <filename>" << endl;
+        return 1;
+    }
+
+    ELFFile elf(argv[1]);
     unique_ptr<Simulator> simptr = make_unique<Simulator>(42);
     Simulator &sim = *simptr;
-    initialize_memory(sim.mem);
+    sim.mem.load_elf(elf);
+    cout << ".text section dump: " << endl;
+    Instruction inst;
+    for (uint32_t i = 0x30000000; i < 0x30000000 + 16; i += 2) {
+        uint16_t inst_val = sim.mem.read<uint16_t>(i);
+        inst = Instruction(inst_val);
+        cout << "0x" << hex << i << ": 0x" << hex << inst_val << " (" << inst << ")" << endl;
+    }
+    sim.mem.write<uint16_t>(0x30000000, 0xe006);
+    sim.pc = elf.get_header().entry;    
     sim.launch_sim_thread();
     while (sim.running) {
         this_thread::sleep_for(100ms);
     }
     cout << "Final register values:" << endl;
     for (unsigned i = 0; i < sizeof(sim.regs)/sizeof(sim.regs[0]); i++) {
-        cout << "R" << i << ": 0x" << hex << sim.regs[i] << " (" << dec << static_cast<int32_t>(sim.regs[i]) << ")" << endl;
+        cout << "R" << dec << i << ": 0x" << hex << sim.regs[i] << " (" << dec << static_cast<int32_t>(sim.regs[i]) << ")" << endl;
     }
     cout << "PC: 0x" << hex << sim.pc << endl;
     cout << "cc: " << bitset<3>(sim.cond) << endl;
+    return 0;
 }

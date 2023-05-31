@@ -1,6 +1,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstdlib>
+#include <iostream>
 
 #include "exceptions.hpp"
 #include "instruction.hpp"
@@ -21,7 +22,9 @@ namespace lc32sim {
         if (this->running) {
             this->stop_sim();
         } else {
-            this->sim_thread.join();
+            if (this->sim_thread.joinable()) {
+                this->sim_thread.join();
+            }
         }
     }
 
@@ -57,7 +60,7 @@ namespace lc32sim {
                     break;
                 case InstructionType::BR:
                     if (cond & i.data.br.cond) {
-                        pc += i.data.br.pcoffset9;
+                        pc += i.data.br.pcoffset9 * 2;
                     }
                     break;
                 case InstructionType::JMP:
@@ -65,7 +68,7 @@ namespace lc32sim {
                     break;
                 case InstructionType::JSR:
                     regs[7] = pc;
-                    pc += i.data.jsr.pcoffset11;
+                    pc += i.data.jsr.pcoffset11 * 2;
                     break;
                 case InstructionType::JSRR:
                     regs[7] = pc;
@@ -116,10 +119,20 @@ namespace lc32sim {
                     mem.write<uint32_t>(regs[i.data.store.baseR] + (i.data.store.offset6 * 4), static_cast<uint32_t>(regs[i.data.store.sr]));
                     break;
                 case InstructionType::TRAP:
-                    if (i.data.trap.trapvect8 == 0x25) {
-                        this->running = false;
-                    } else {
-                        throw SimulatorException("simulate(): unknown TRAP vector " + std::to_string(i.data.trap.trapvect8));
+                    switch (i.data.trap.trapvect8) {
+                        case TrapVector::PUTS: {
+                            char c;
+                            for (uint32_t i = regs[0]; (c = mem.read<char>(i)) != '\0'; i++) {
+                                std::cout << c;
+                            }
+                            std::cout << std::endl;
+                            break;
+                        }
+                        case TrapVector::HALT:
+                            this->running = false;
+                            break;
+                        default:
+                            throw SimulatorException("simulate(): unknown TRAP vector " + std::to_string(static_cast<uint8_t>(i.data.trap.trapvect8)));
                     }
                     break;
                 case InstructionType::XOR:
@@ -145,6 +158,8 @@ namespace lc32sim {
             throw SimulatorException("stop_sim(): simulator not running");
         }
         this->running = false;
-        sim_thread.join();
+        if (this->sim_thread.joinable()) {
+            sim_thread.join();
+        }
     }
 }
