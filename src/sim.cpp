@@ -9,7 +9,7 @@
 #include "utils.hpp"
 
 namespace lc32sim {
-    Simulator::Simulator(unsigned int seed) : running(false), pc(0x3000), mem() {
+    Simulator::Simulator(unsigned int seed) : running(false), pc(0x3000), display(), mem() {
         std::srand(seed);
         this->running = false;
         pc = 0x3000;
@@ -17,6 +17,7 @@ namespace lc32sim {
             this->regs[i] = std::rand();
         }
         mem.set_seed(std::rand());
+        display.initialize();
     }
     Simulator::~Simulator() {
         if (this->running) {

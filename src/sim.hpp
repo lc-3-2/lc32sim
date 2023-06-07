@@ -2,6 +2,7 @@
 #include <chrono>
 #include <thread>
 
+#include "display.hpp"
 #include "memory.hpp"
 
 namespace lc32sim {
@@ -11,6 +12,7 @@ namespace lc32sim {
             volatile bool running;
             uint32_t pc;
             uint32_t regs[8];
+            Display display;
             Memory mem;
             uint8_t cond;
             std::thread sim_thread;

@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.7)
 project(lc32sim VERSION 0.1
                 LANGUAGES CXX)
 
+find_package(SDL2 REQUIRED)
+include_directories(${SDL2_INCLUDE_DIRS})
+
 set(SOURCES
     src/display.cpp
     src/elf_file.cpp
@@ -35,3 +38,4 @@ target_compile_options(sim PUBLIC "$<$<CONFIG:DEBUG>:${DBGINFO_FLAGS}>")
 target_compile_options(sim PUBLIC "$<$<CONFIG:RELEASE>:${RELEASE_FLAGS}>")
 target_compile_options(sim PUBLIC "$<$<CONFIG:RELEASE_DBGINFO>:${RELEASE_FLAGS}>")
 target_compile_options(sim PUBLIC "$<$<CONFIG:RELEASE_DBGINFO>:${DBGINFO_FLAGS}>")
+target_link_libraries(sim PUBLIC ${SDL2_LIBRARIES})

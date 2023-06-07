@@ -38,24 +38,37 @@ int main(int argc, char *argv[]) {
     unique_ptr<Simulator> simptr = make_unique<Simulator>(42);
     Simulator &sim = *simptr;
     sim.mem.load_elf(elf);
-    cout << ".text section dump: " << endl;
-    Instruction inst;
-    for (uint32_t i = 0x30000000; i < 0x30000000 + 16; i += 2) {
-        uint16_t inst_val = sim.mem.read<uint16_t>(i);
-        inst = Instruction(inst_val);
-        cout << "0x" << hex << i << ": 0x" << hex << inst_val << " (" << inst << ")" << endl;
-    }
+    // cout << ".text section dump: " << endl;
+    // Instruction inst;
+    // for (uint32_t i = 0x30000000; i < 0x30000000 + 16; i += 2) {
+    //     uint16_t inst_val = sim.mem.read<uint16_t>(i);
+    //     inst = Instruction(inst_val);
+    //     cout << "0x" << hex << i << ": 0x" << hex << inst_val << " (" << inst << ")" << endl;
+    // }
     sim.mem.write<uint16_t>(0x30000000, 0xe006);
     sim.pc = elf.get_header().entry;    
     sim.launch_sim_thread();
     while (sim.running) {
         this_thread::sleep_for(100ms);
     }
-    cout << "Final register values:" << endl;
-    for (unsigned i = 0; i < sizeof(sim.regs)/sizeof(sim.regs[0]); i++) {
-        cout << "R" << dec << i << ": 0x" << hex << sim.regs[i] << " (" << dec << static_cast<int32_t>(sim.regs[i]) << ")" << endl;
+    // cout << "Final register values:" << endl;
+    // for (unsigned i = 0; i < sizeof(sim.regs)/sizeof(sim.regs[0]); i++) {
+    //     cout << "R" << dec << i << ": 0x" << hex << sim.regs[i] << " (" << dec << static_cast<int32_t>(sim.regs[i]) << ")" << endl;
+    // }
+    // cout << "PC: 0x" << hex << sim.pc << endl;
+    // cout << "cc: " << bitset<3>(sim.cond) << endl;
+
+    uint16_t *video_buffer = new uint16_t[640 * 480];
+    // Auto generate a rainbow pattern
+    for (unsigned int row = 0; row < 480; row++) {
+        for (unsigned int col = 0; col < 640; col++) {
+            uint8_t r = (row * 31) / 480;
+            uint8_t g = (col * 31) / 640;
+            uint8_t b = ((row + col) * 31) / (480 + 640);
+            video_buffer[row * 640 + col] = (r << 10) | (g << 5) | b;
+        }
     }
-    cout << "PC: 0x" << hex << sim.pc << endl;
-    cout << "cc: " << bitset<3>(sim.cond) << endl;
+    sim.display.loop(video_buffer);
+
     return 0;
 }

@@ -26,6 +26,11 @@ namespace lc32sim {
         public:
             ELFParsingException(std::string msg) : std::runtime_error(msg) {}
     };
+    class DisplayException : public SimulatorException {
+        public:
+            DisplayException(std::string msg) : SimulatorException(msg) {}
+            DisplayException(std::string msg, std::string msg2) : SimulatorException(msg + ": " + msg2) {}
+    };
     // class MalformedInstruction : public SimulatorException {
     //     public:
     //         MalformedInstruction(uint16_t instruction_bits, std::string msg) : SimulatorException(

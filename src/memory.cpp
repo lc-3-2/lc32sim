@@ -1,5 +1,4 @@
 #include <cstdlib>
-#include <iostream>
 #include <unordered_map>
 
 #include "exceptions.hpp"
@@ -67,8 +66,6 @@ namespace lc32sim {
     template void Memory::write<uint32_t>(uint32_t addr, uint32_t val);
 
     void Memory::load_elf(ELFFile& elf) {
-        using namespace std;
-        cout << "Loading ELF file with " << dec << elf.get_header().phnum << " segments" << endl;
         for (uint16_t i = 0; i < elf.get_header().phnum; i++) {
             auto ph = elf.get_program_header(i);
             if (ph.type == segment_type::LOADABLE) {
@@ -81,10 +78,6 @@ namespace lc32sim {
                     }
                 }
                 elf.read_chunk(&this->data[ph.vaddr], ph.offset, ph.filesz);
-
-                cout << "Loaded segment " << dec << i << " from file offset " << dec << ph.offset << " to memory address 0x" << hex << ph.vaddr << endl;
-            } else {
-                cout << "Skipping segment " << dec << i << " of type " << ph.type << endl;
             }
         }
     }
