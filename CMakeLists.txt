@@ -13,6 +13,7 @@ set(SOURCES
     src/memory.cpp
     src/sim.cpp
 )
+# Set for all configurations
 set(FLAGS
     -Wextra
     -Wall
@@ -24,13 +25,22 @@ set(FLAGS
     -Wold-style-cast
     -Waddress-of-packed-member
 )
+# Set for release and release with debug info configurations
 set(RELEASE_FLAGS
     -O3
     -march=native
     -flto
     -DNDEBUG
 )
-set(DBGINFO_FLAG -ggdb3)
+# Set for debug and release with debug info configurations
+set(DBGINFO_FLAGS
+    -ggdb3
+)
+# Set for debug configuration only
+set(DEBUG_FLAGS
+    -O0
+    -DDEBUG_CHECKS # Enables sanity checks in the looped code that could degrade performance
+)
 add_executable(sim ${SOURCES})
 target_compile_features(sim PUBLIC cxx_std_23)
 target_compile_options(sim PUBLIC "${FLAGS}")

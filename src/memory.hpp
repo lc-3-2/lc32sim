@@ -27,6 +27,7 @@ namespace lc32sim {
 
             void set_seed(unsigned int seed);
             void load_elf(ELFFile& elf);
+            uint16_t *get_video_buffer();
 
             template<typename T> T read(uint32_t addr);
             template<typename T> void write(uint32_t addr, T val);

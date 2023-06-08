@@ -9,10 +9,9 @@
 #include "utils.hpp"
 
 namespace lc32sim {
-    Simulator::Simulator(unsigned int seed) : running(false), pc(0x3000), display(), mem() {
+    Simulator::Simulator(unsigned int seed) : running(false), pc(0x30000000), display(), mem() {
         std::srand(seed);
         this->running = false;
-        pc = 0x3000;
         for (size_t i = 0; i < sizeof(this->regs)/sizeof(this->regs[0]); i++) {
             this->regs[i] = std::rand();
         }
@@ -44,7 +43,9 @@ namespace lc32sim {
         while (this->running) {
             // FETCH/DECODE
             i = Instruction(mem.read<uint16_t>(pc));
+            std::cout << "Executing instruction " << i << std::endl;
             pc += 2;
+            std::cout << "(1) PC is now " << pc << std::endl;
 
             // EXECUTE
             uint32_t val2; // represents the second value in arithmetic instructions
@@ -62,18 +63,22 @@ namespace lc32sim {
                 case InstructionType::BR:
                     if (cond & i.data.br.cond) {
                         pc += i.data.br.pcoffset9 * 2;
+                        std::cout << "(2) PC is now " << pc << std::endl;
                     }
                     break;
                 case InstructionType::JMP:
                     pc = regs[i.data.jmp.baseR];
+                    std::cout << "(3) PC is now " << pc << std::endl;
                     break;
                 case InstructionType::JSR:
                     regs[7] = pc;
                     pc += i.data.jsr.pcoffset11 * 2;
+                    std::cout << "(4) PC is now " << pc << std::endl;
                     break;
                 case InstructionType::JSRR:
                     regs[7] = pc;
                     pc = regs[i.data.jsrr.baseR];
+                    std::cout << "(5) PC is now " << pc << std::endl;
                     break;
                 case InstructionType::LDB:
                     regs[i.data.load.dr] = sext<8, 32>(mem.read<uint8_t>(regs[i.data.load.baseR] + i.data.load.offset6));
@@ -145,6 +150,8 @@ namespace lc32sim {
                     throw SimulatorException("simulate(): unknown instruction type " + std::to_string(static_cast<std::underlying_type<InstructionType>::type>(i.type)));
                     break;                
             }
+
+            this->display.draw(mem.get_video_buffer());
         }
     }
     void Simulator::launch_sim_thread() {
@@ -153,6 +160,10 @@ namespace lc32sim {
         }
         this->sim_thread = std::thread(&Simulator::simulate, this);
         this->running = true;
+    }
+    void Simulator::run_sim_with_display() {
+        this->launch_sim_thread();
+        this->display.loop();
     }
     void Simulator::stop_sim() {
         if (!this->running) {

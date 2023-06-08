@@ -1,7 +1,8 @@
 #pragma once
 #include <cstdint>
 
-template<std::size_t from, std::size_t to> inline uint32_t sext(uint32_t val) {
+template<std::size_t from, std::size_t to>
+inline uint32_t sext(uint32_t val) {
     static_assert(from <= to, "`from` must be less than or equal to to");
     static_assert(to <= 32, "`to` must be less than or equal to 32");
 

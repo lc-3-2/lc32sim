@@ -14,6 +14,7 @@ namespace lc32sim {
             uint32_t regs[8];
             Display display;
             Memory mem;
+            uint16_t video_buffer[SCREEN_WIDTH][SCREEN_HEIGHT];
             uint8_t cond;
             std::thread sim_thread;
 
@@ -23,6 +24,7 @@ namespace lc32sim {
             Simulator(unsigned int seed);
             ~Simulator();
             void launch_sim_thread();
+            void run_sim_with_display();
             void stop_sim();
     };
 }
