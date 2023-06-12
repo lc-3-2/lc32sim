@@ -29,13 +29,8 @@ namespace lc32sim {
     }
 
     void Simulator::setcc(uint32_t val) {
-        if (val == 0) {
-            cond = 0b001;
-        } else if (val & 0x80000000) {
-            cond = 0b100;
-        } else {
-            cond = 0b010;
-        }
+        int32_t sval = static_cast<int32_t>(val);
+        cond = (sval < 0) ? 0b100 : (sval == 0) ? 0b010 : 0b001;
     }
 
     void Simulator::simulate() {
