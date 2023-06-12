@@ -38,10 +38,10 @@ int main(int argc, char *argv[]) {
     unique_ptr<Simulator> simptr = make_unique<Simulator>(42);
     Simulator &sim = *simptr;
     sim.mem.load_elf(elf);
-    sim.mem.write<uint16_t>(0x30000000, 0xe006);
+    // sim.mem.write<uint16_t>(0x30000000, 0xe006);
     cout << ".text section dump: " << endl;
     Instruction inst;
-    for (uint32_t i = 0x30000000; i < 0x30000000 + 16; i += 2) {
+    for (uint32_t i = 0x30000000; i < 0x30000000 + 0xb4; i += 2) {
         uint16_t inst_val = sim.mem.read<uint16_t>(i);
         inst = Instruction(inst_val);
         cout << "0x" << hex << i << ": 0x" << hex << inst_val << " (" << inst << ")" << endl;
@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
     // cout << "PC: 0x" << hex << sim.pc << endl;
     // cout << "cc: " << bitset<3>(sim.cond) << endl;
 
-    // uint16_t *video_buffer = new uint16_t[640 * 480];
+    // uint16_t *video_buffer = sim.mem.get_video_buffer();
     // // Auto generate a rainbow pattern
     // for (unsigned int row = 0; row < 480; row++) {
     //     for (unsigned int col = 0; col < 640; col++) {

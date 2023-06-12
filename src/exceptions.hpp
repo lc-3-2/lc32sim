@@ -2,6 +2,7 @@
 #include <bitset>
 #include <ios>
 #include <sstream>
+#include <stacktrace>
 #include <stdexcept>
 #include <string>
 

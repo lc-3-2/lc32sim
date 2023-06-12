@@ -90,8 +90,8 @@ namespace lc32sim {
         }
         #endif
 
-        auto now = std::chrono::steady_clock::now();
-        auto elapsed = now - this->last_frame;
+        time_point now = std::chrono::steady_clock::now();
+        duration elapsed = now - this->last_frame;
 
         if (elapsed > FRAME_TIME) {
             // We need to draw the previous frame
@@ -106,11 +106,6 @@ namespace lc32sim {
             // Loop to skip frames if we're too far behind
             while ((now - this->last_frame) > FRAME_TIME) {
                 this->last_frame += FRAME_TIME;
-                frame_counter++;
-                if (frame_counter == 60) {
-                    frame_counter = 0;
-                    this->last_frame += ADJUSTMENT_PER_SECOND;
-                }
             }
         } else {
             int elapsed_pixels = (elapsed / PIXEL_TIME);
