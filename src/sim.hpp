@@ -9,6 +9,15 @@
 
 namespace lc32sim {
     class Simulator {
+        private:
+            /*!
+             * \brief Dumps the state of the machine to `cout`
+             *
+             * This method is used by the `BREAK` TRAP to write out the state of
+             * the machine. It prints with four spaces in front of each entry.
+             */
+            void dump_state();
+
         // TODO: figure out exactly what the public interface should be
         // private:
         public:
