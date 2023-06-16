@@ -13,7 +13,9 @@
       pkgs = nixpkgs-23-05.legacyPackages.${system};
       inherit (pkgs) stdenv;
 
-      buildInputs = [];
+      buildInputs = [
+        pkgs.boost
+      ];
       nativeBuildInputs = [
         pkgs.cmake
       ];
