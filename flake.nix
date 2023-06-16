@@ -18,6 +18,7 @@
       ];
       nativeBuildInputs = [
         pkgs.cmake
+        pkgs.ninja
       ];
       propagatedBuildInputs = [
         pkgs.SDL2
