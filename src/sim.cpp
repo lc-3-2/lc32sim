@@ -3,6 +3,8 @@
 #include <cstdlib>
 #include <iostream>
 #include <iomanip>
+#include <termios.h>
+#include <unistd.h>
 
 #include "exceptions.hpp"
 #include "instruction.hpp"
@@ -19,6 +21,20 @@ namespace lc32sim {
         }
         mem.set_seed(std::rand());
         display.initialize();
+
+        // Need to turn of ECHO and ICANON on the terminal
+        // GETC and IN assumes that characters are not echoed and that input is
+        // not line buffered.
+        {
+            // Get the terminal information
+            struct termios ti;
+            if (tcgetattr(STDIN_FILENO, &ti))
+                throw TerminalConfigurationException("Could not retrieve terminal configuration");
+            // Disable
+            ti.c_lflag &= ~(ECHO | ICANON);
+            if (tcsetattr(STDIN_FILENO, TCSANOW, &ti))
+                throw TerminalConfigurationException("Could not disable ECHO");
+        }
     }
     Simulator::~Simulator() {
         if (this->running) {
@@ -27,6 +43,17 @@ namespace lc32sim {
             if (this->sim_thread.joinable()) {
                 this->sim_thread.join();
             }
+        }
+
+        // We turned ECHO and ICANON off in the constructor, so turn it back on
+        // Don't fail if this doesn't work - we're dead anyway
+        {
+            // Get the terminal information
+            struct termios ti;
+            tcgetattr(STDIN_FILENO, &ti);
+            // Enable
+            ti.c_lflag |= ECHO | ICANON;
+            tcsetattr(STDIN_FILENO, TCSANOW, &ti);
         }
     }
 

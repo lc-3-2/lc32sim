@@ -6,6 +6,7 @@
 #include <stacktrace>
 #include <stdexcept>
 #include <string>
+#include <cstring>
 
 namespace lc32sim {
     inline std::string int_to_hex(uint64_t val) {
@@ -38,4 +39,21 @@ namespace lc32sim {
     //         MalformedInstruction(uint16_t instruction_bits, std::string msg) : SimulatorException(
     //             "Malformed instruction (" + std::bitset<16>(instruction_bits).to_string() + "): " + msg) {}
     // };
+
+    /*!
+     * \brief Thrown if we can't configure the terminal
+     *
+     * The simulator needs to configure the terminal while running the
+     * simulator. Specifically, it needs to disable echoing. If it can't this
+     * exception is thrown.
+     */
+    class TerminalConfigurationException : public SimulatorException {
+        public:
+            TerminalConfigurationException() : SimulatorException(
+                std::string("Could not configure terminal") + std::strerror(errno)
+            ) {}
+            TerminalConfigurationException(std::string msg) : SimulatorException(
+                msg + std::strerror(errno)
+            ) {}
+    };
 }
