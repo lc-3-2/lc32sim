@@ -2,6 +2,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
+#include <iomanip>
 
 #include "exceptions.hpp"
 #include "instruction.hpp"
@@ -122,17 +123,43 @@ namespace lc32sim {
                     break;
                 case InstructionType::TRAP:
                     switch (i.data.trap.trapvect8) {
+                        case TrapVector::GETC: {
+                            char received;
+                            std::cin >> received;
+                            this->regs[0] = static_cast<uint32_t>(received & 0xff);
+                            break;
+                        }
+                        case TrapVector::OUT:
+                            std::cout << static_cast<char>(this->regs[0] & 0xff);
+                            break;
                         case TrapVector::PUTS: {
                             char c;
-                            for (uint32_t i = regs[0]; (c = mem.read<char>(i)) != '\0'; i++) {
+                            for (uint32_t i = regs[0]; (c = mem.read<char>(i)) != '\0'; i++)
                                 std::cout << c;
-                            }
-                            std::cout << std::endl;
+                            break;
+                        }
+                        case TrapVector::IN: {
+                            char received;
+                            std::cout << "> ";
+                            std::cin >> received;
+                            std::cout << received;
+                            this->regs[0] = static_cast<uint32_t>(received & 0xff);
                             break;
                         }
                         case TrapVector::HALT:
                             this->running = false;
                             break;
+                        case TrapVector::BREAK:
+                            // If the user tries to give control to the
+                            // debugger, print a message and dump the state. It
+                            // is *not* an error to execute this instruction.
+                            std::cout << "Encountered BREAK:\n";
+                            this->dump_state();
+                            std::cout << "    Continuing execution...\n";
+                            break;
+                        case TrapVector::CRASH:
+                            // This should never happen. If it does, die
+                            throw SimulatorException("simulate(): encountered CRASH");
                         default:
                             throw SimulatorException("simulate(): unknown TRAP vector " + std::to_string(static_cast<uint8_t>(i.data.trap.trapvect8)));
                     }
@@ -144,7 +171,7 @@ namespace lc32sim {
                     break;
                 default:
                     throw SimulatorException("simulate(): unknown instruction type " + std::to_string(static_cast<std::underlying_type<InstructionType>::type>(i.type)));
-                    break;                
+                    break;
             }
 
             this->display.draw(mem.get_video_buffer());
@@ -169,5 +196,21 @@ namespace lc32sim {
         if (this->sim_thread.joinable()) {
             sim_thread.join();
         }
+    }
+
+    void Simulator::dump_state() {
+        std::cout << "    PC: "
+            << std::hex << std::setfill('0') << std::setw(8)
+            << this->pc << '\n';
+        std::cout << "    CC: "
+            << (this->cond & 0b100 ? "n" : "")
+            << (this->cond & 0b010 ? "z" : "")
+            << (this->cond & 0b001 ? "p" : "")
+            << '\n';
+
+        for (size_t i = 0; i < 8; i++)
+            std::cout << "    R" << i << ": "
+                << std::hex << std::setfill('0') << std::setw(8)
+                << this->regs[i] << '\n';
     }
 }

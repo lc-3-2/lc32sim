@@ -11,13 +11,30 @@ namespace lc32sim {
         STB, STH, STW, TRAP, XOR
     };
     enum class TrapVector : uint8_t {
+        // Note that PUTSP is not defined. This is because we're on a
+        // byte-addressible architecture, so packing bytes into memory words
+        // just isn't a thing.
         GETC = 0x20,
         OUT = 0x21,
         PUTS = 0x22,
         IN = 0x23,
-        PUTSP = 0x24,
         HALT = 0x25,
-        RESERVED = 0xFF /* used for padding by the compiler */
+
+        /*!
+         * \brief TRAP for debug breakpoints
+         *
+         * These can be emitted if the user calls __builtin_debugtrap(). It is
+         * supposed to give control to the debugger, but we don't have one.
+         */
+        BREAK = 0xFE,
+
+        /*!
+         * \brief TRAP for bad execution
+         *
+         * This is used for padding by the compiler. It denotes an instruction
+         * that should never be executed.
+         */
+        CRASH = 0xFF,
     };
     union InstructionData {
         struct {
@@ -71,7 +88,7 @@ namespace lc32sim {
             Instruction(uint16_t instruction_bits);
             ~Instruction();
     };
-    
+
     inline std::ostream &operator<<(std::ostream &stream, Instruction const &i) {
         std::ios_base::fmtflags flags(stream.flags());
 
