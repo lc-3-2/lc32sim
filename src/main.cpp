@@ -39,13 +39,13 @@ int main(int argc, char *argv[]) {
     Simulator &sim = *simptr;
     sim.mem.load_elf(elf);
     // sim.mem.write<uint16_t>(0x30000000, 0xe006);
-    cout << ".text section dump: " << endl;
-    Instruction inst;
-    for (uint32_t i = 0x30000000; i < 0x30000000 + 0xb4; i += 2) {
-        uint16_t inst_val = sim.mem.read<uint16_t>(i);
-        inst = Instruction(inst_val);
-        cout << "0x" << hex << i << ": 0x" << hex << inst_val << " (" << inst << ")" << endl;
-    }
+    // cout << ".text section dump: " << endl;
+    // Instruction inst;
+    // for (uint32_t i = 0x30000000; i < 0x30000000 + 0xb4; i += 2) {
+    //     uint16_t inst_val = sim.mem.read<uint16_t>(i);
+    //     inst = Instruction(inst_val);
+    //     cout << "0x" << hex << i << ": 0x" << hex << inst_val << " (" << inst << ")" << endl;
+    // }
     sim.pc = elf.get_header().entry;    
     // cout << "Final register values:" << endl;
     // for (unsigned i = 0; i < sizeof(sim.regs)/sizeof(sim.regs[0]); i++) {

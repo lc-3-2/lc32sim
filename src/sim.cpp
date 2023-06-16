@@ -11,6 +11,7 @@
 namespace lc32sim {
     Simulator::Simulator(unsigned int seed) : running(false), pc(0x30000000), display(), mem() {
         std::srand(seed);
+        this->video_buffer = std::make_unique<uint16_t[]>(Config.display.width * Config.display.height);
         this->running = false;
         for (size_t i = 0; i < sizeof(this->regs)/sizeof(this->regs[0]); i++) {
             this->regs[i] = std::rand();

@@ -5,6 +5,12 @@ project(lc32sim VERSION 0.1
 find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIRS})
 
+set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+find_package(Boost 1.78.0 REQUIRED COMPONENTS )
+include_directories(${Boost_INCLUDE_DIRS})
+
 set(SOURCES
     src/config.cpp
     src/display.cpp
@@ -49,14 +55,4 @@ target_compile_options(lc32sim PRIVATE "$<$<CONFIG:DEBUG>:${DBGINFO_FLAGS}>")
 target_compile_options(lc32sim PRIVATE "$<$<CONFIG:RELEASE>:${RELEASE_FLAGS}>")
 target_compile_options(lc32sim PRIVATE "$<$<CONFIG:RELEASE_DBGINFO>:${RELEASE_FLAGS}>")
 target_compile_options(lc32sim PRIVATE "$<$<CONFIG:RELEASE_DBGINFO>:${DBGINFO_FLAGS}>")
-target_link_libraries(lc32sim PRIVATE ${SDL2_LIBRARIES})
-
-
-if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
-    cmake_policy(SET CMP0135 NEW)
-endif()
-
-include(FetchContent)
-FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz)
-FetchContent_MakeAvailable(json)
-target_link_libraries(lc32sim PRIVATE nlohmann_json::nlohmann_json)
+target_link_libraries(lc32sim PRIVATE ${SDL2_LIBRARIES} ${Boost_LIBRARIES})

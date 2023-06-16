@@ -8,13 +8,18 @@ namespace lc32sim {
     uint32_t Display::LC32_EVENT_DRAWPIXELS = static_cast<uint32_t>(-1);
     uint32_t Display::LC32_EVENT_PRESENT = static_cast<uint32_t>(-1);
 
+    using namespace std::chrono_literals;
+    duration Display::FRAME_TIME = 1s / Config.display.frames_per_second;
+    duration Display::LINE_TIME = FRAME_TIME / (Config.display.height + Config.display.vblank_length);
+    duration Display::PIXEL_TIME = LINE_TIME / (Config.display.width + Config.display.hblank_length);
+
     void Display::initialize() {
         if (this->initialized) {
             throw DisplayException("Display already initialized");
         }
         this->initialized = true;
 
-        const int renderer_flags = SDL_RENDERER_ACCELERATED;
+        int renderer_flags = Config.display.accelerated_rendering ? SDL_RENDERER_ACCELERATED : SDL_RENDERER_SOFTWARE;
         const int window_flags = SDL_WINDOW_ALLOW_HIGHDPI;
 
         if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -29,7 +34,7 @@ namespace lc32sim {
             LC32_EVENT_PRESENT = LC32_EVENT_DRAWPIXELS + 1;
         }
 
-        this->window = SDL_CreateWindow("LC32 Simulator", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, window_flags);
+        this->window = SDL_CreateWindow("LC3.2 Simulator", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, Config.display.width, Config.display.height, window_flags);
         if (!this->window) {
             throw DisplayException("Window could not be created", SDL_GetError());
         }
@@ -42,7 +47,7 @@ namespace lc32sim {
         int render_width, render_height;
         SDL_GetRendererOutputSize(this->renderer, &render_width, &render_height);
         std::cout << "Window size: " << render_width << "x" << render_height << std::endl;
-        SDL_RenderSetScale(renderer, render_width / SCREEN_WIDTH, render_height / SCREEN_HEIGHT);
+        SDL_RenderSetScale(renderer, render_width / Config.display.width, render_height / Config.display.height);
 
         SDL_SetRenderDrawColor(this->renderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(this->renderer);
@@ -68,8 +73,8 @@ namespace lc32sim {
                 uint16_t *buffer = static_cast<uint16_t*>(e.user.data2);
 
                 for (uintptr_t i = 0; i < num_pixels; i++) {
-                    int row = (start_pos + i) / SCREEN_WIDTH;
-                    int col = (start_pos + i) % SCREEN_WIDTH;
+                    int row = (start_pos + i) / Config.display.width;
+                    int col = (start_pos + i) % Config.display.width;
                     uint16_t pixel = buffer[i];
                     uint8_t r = (pixel & 0x7C00) >> 7;
                     uint8_t g = (pixel & 0x03E0) >> 2;
@@ -95,7 +100,7 @@ namespace lc32sim {
 
         if (elapsed > FRAME_TIME) {
             // We need to draw the previous frame
-            uintptr_t num_pixels = (SCREEN_WIDTH * SCREEN_HEIGHT) - this->next_to_draw;
+            uintptr_t num_pixels = (Config.display.width * Config.display.height) - this->next_to_draw;
             if (num_pixels > 0) {
                 std::cout << "Drawing " << std::dec << num_pixels << " pixels #1" << std::endl;
                 push_draw_event(this->next_to_draw, num_pixels, video_buffer);
@@ -109,9 +114,9 @@ namespace lc32sim {
             }
         } else {
             int elapsed_pixels = (elapsed / PIXEL_TIME);
-            int current_row = elapsed_pixels / (SCREEN_WIDTH + HBLANK_LENGTH);
-            int current_col = elapsed_pixels % (SCREEN_WIDTH + HBLANK_LENGTH);
-            int end_pos = (current_row * SCREEN_WIDTH) + current_col;
+            int current_row = elapsed_pixels / (Config.display.width + Config.display.hblank_length);
+            int current_col = elapsed_pixels % (Config.display.width + Config.display.hblank_length);
+            int end_pos = (current_row * Config.display.width) + current_col;
             if (end_pos >= this->next_to_draw) {
                 uintptr_t num_pixels = end_pos - this->next_to_draw + 1;
                 std::cout << "Drawing " << std::dec << num_pixels << " pixels #2" << std::endl;

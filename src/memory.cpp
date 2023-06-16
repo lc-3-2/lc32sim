@@ -15,8 +15,8 @@ namespace lc32sim {
         
         // Ensure that the video buffer pages are iniitalized so the display doesn't read random garbage
         constexpr uint32_t vbuf_start_page = IO_SPACE_ADDR / PAGE_SIZE;
-        constexpr uint32_t vbuf_bytes = SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(uint16_t);
-        constexpr uint32_t vbuf_pages = static_cast<uint32_t>((vbuf_bytes / static_cast<double>(PAGE_SIZE)) + 0.5);
+        uint32_t vbuf_bytes = Config.display.width * Config.display.height * sizeof(uint16_t);
+        uint32_t vbuf_pages = static_cast<uint32_t>((vbuf_bytes / static_cast<double>(PAGE_SIZE)) + 0.5);
         for (uint32_t page = vbuf_start_page; page < vbuf_start_page + vbuf_pages; page++) {
             if (!this->page_initialized[page]) {
                 this->init_page(page);
@@ -49,8 +49,17 @@ namespace lc32sim {
     template<typename T> T Memory::read(uint32_t addr) {
         uint32_t page_num = addr / PAGE_SIZE;
         if constexpr (sizeof(T) > 1) {
-            if (addr % sizeof(T) != 0) {
-                throw UnalignedMemoryAccessException(addr, sizeof(T));
+            if (Config.allow_unaligned_access) {
+                uint32_t end_page_num = (addr + sizeof(T) - 1) / PAGE_SIZE;
+                for (uint32_t page = page_num + 1; page <= end_page_num; page++) {
+                    if (!this->page_initialized[page]) {
+                        this->init_page(page);
+                    }
+                }
+            } else {
+                if (addr % sizeof(T) != 0) {
+                    throw UnalignedMemoryAccessException(addr, sizeof(T));
+                }
             }
         }
         if (!this->page_initialized[page_num]) {
@@ -66,8 +75,17 @@ namespace lc32sim {
     template <typename T> void Memory::write(uint32_t addr, T val) {
         uint32_t page_num = addr / PAGE_SIZE;
         if constexpr (sizeof(T) > 1) {
-            if (addr % sizeof(T) != 0) {
-                throw UnalignedMemoryAccessException(addr, sizeof(T));
+            if (Config.allow_unaligned_access) {
+                uint32_t end_page_num = (addr + sizeof(T) - 1) / PAGE_SIZE;
+                for (uint32_t page = page_num + 1; page <= end_page_num; page++) {
+                    if (!this->page_initialized[page]) {
+                        this->init_page(page);
+                    }
+                }
+            } else {
+                if (addr % sizeof(T) != 0) {
+                    throw UnalignedMemoryAccessException(addr, sizeof(T));
+                }
             }
         }
         if (!this->page_initialized[page_num]) {

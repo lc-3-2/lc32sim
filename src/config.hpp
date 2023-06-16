@@ -1,22 +1,27 @@
 #pragma once
 
-#include "nlohmann/json.hpp"
-using json = nlohmann::json;
-
 namespace lc32sim {
     class Config
     {
         private:
             const std::string CONFIG_FILE_NAME = "lc32sim.json";
-            json data;
             void set_defaults();
 
         public:
             Config();
             Config(Config const&) = delete;
             void operator=(Config const&) = delete;
-            int display_width;
-            int display_height;
+
+            // Configurable options:
+            struct {
+                int width = 640;
+                int height = 480;
+                int hblank_length = 68;
+                int vblank_length = 68;
+                double frames_per_second = 60.0;
+                bool accelerated_rendering = true;
+            } display;
+            bool allow_unaligned_access = false;
     };
-    extern const Config &config;
+    extern const class Config &Config;
 }
