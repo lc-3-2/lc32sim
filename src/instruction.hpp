@@ -73,6 +73,8 @@ namespace lc32sim {
     };
     
     inline std::ostream &operator<<(std::ostream &stream, Instruction const &i) {
+        std::ios_base::fmtflags flags(stream.flags());
+
         stream << std::dec;
         switch(i.type) {
             case InstructionType::ADD: stream << "ADD "; goto arithmetic;
@@ -119,6 +121,7 @@ namespace lc32sim {
             default: stream << "Unrecognized instruction"; break;
         }
 
+        stream.flags(flags);
         return stream;
     }
 }
