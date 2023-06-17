@@ -177,7 +177,7 @@ namespace lc32sim {
                                 // debugger, print a message and dump the state. It
                                 // is *not* an error to execute this instruction.
                                 logger.info << "Encountered BREAK:";
-                                this->dump_state();
+                                this->dump_state(logger.info);
                                 logger.info << "    Continuing execution...";
                                 break;
                             case TrapVector::CRASH:
@@ -197,6 +197,11 @@ namespace lc32sim {
                         break;
                 }
 
+                // Print the state of the machine for debugging purposes
+                logger.debug << "Machine state after " << i <<":";
+                this->dump_state(logger.debug);
+
+                // Update the display
                 if (display != nullptr) {
                     display->draw(mem.get_video_buffer());
                 }
@@ -231,17 +236,17 @@ namespace lc32sim {
         }
     }
 
-    void Simulator::dump_state() {
-        logger.info << "    PC: "
+    void Simulator::dump_state(Log log) {
+        log << "    PC: "
             << std::hex << std::setfill('0') << std::setw(8)
             << this->pc;
-        logger.info << "    CC: "
+        log << "    CC: "
             << (this->cond & 0b100 ? "n" : ".")
             << (this->cond & 0b010 ? "z" : ".")
             << (this->cond & 0b001 ? "p" : ".");
 
         for (size_t i = 0; i < 8; i++)
-            logger.info << "    R" << i << ": "
+            log << "    R" << i << ": "
                 << std::hex << std::setfill('0') << std::setw(8)
                 << this->regs[i];
     }
