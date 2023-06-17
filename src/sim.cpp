@@ -236,9 +236,9 @@ namespace lc32sim {
             << std::hex << std::setfill('0') << std::setw(8)
             << this->pc;
         logger.info << "    CC: "
-            << (this->cond & 0b100 ? "n" : "")
-            << (this->cond & 0b010 ? "z" : "")
-            << (this->cond & 0b001 ? "p" : "");
+            << (this->cond & 0b100 ? "n" : ".")
+            << (this->cond & 0b010 ? "z" : ".")
+            << (this->cond & 0b001 ? "p" : ".");
 
         for (size_t i = 0; i < 8; i++)
             logger.info << "    R" << i << ": "
