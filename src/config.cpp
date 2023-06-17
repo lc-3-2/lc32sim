@@ -8,8 +8,8 @@
 #include "log.hpp"
 
 namespace lc32sim {
-    // `instance` is modifiable, but only available in this file
-    // `Config` is const and available everywhere that includes config.hpp
+    // `Const_instance` is modifiable, so it should generally not be used directly
+    // `Config` is a const reference and is preferable for anyone who is reading config values
     class Config config_instance;
     const class Config &Config = config_instance;
 
@@ -19,9 +19,9 @@ namespace lc32sim {
         }
     }
 
-    void Config::load_config_file(std::string filename) {
+    void Config::load_config(argparse::ArgumentParser program) {
         // Check for existence of config file
-        std::ifstream config_file(filename);
+        std::ifstream config_file(program.get<std::string>("--config-file"));
         std::string config_message = "No config file found, using defaults";
 
         if (config_file.good()) {
@@ -36,6 +36,15 @@ namespace lc32sim {
             }
 
             config_message = "Config loaded";
+        }
+
+        // Certain command line options can override config file options
+        using std::literals::string_literals::operator""s;
+        if (program["--log-level"] != "use-config"s) {
+            this->log_level = program.get<std::string>("--log-level");
+        }
+        if (program["--software-rendering"] == true) {
+            this->display.accelerated_rendering = false;
         }
 
         try {

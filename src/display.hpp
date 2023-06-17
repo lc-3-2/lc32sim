@@ -32,7 +32,7 @@ namespace lc32sim {
         public:
             Display();
             void initialize();
-            void loop();
+            bool iterate();
             void draw(uint16_t *video_buffer);
     };
 }

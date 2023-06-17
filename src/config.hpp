@@ -1,8 +1,11 @@
 #pragma once
 
+#include <argparse/argparse.hpp>
 #include <string>
 
 namespace lc32sim {
+    // log level used if not specified in config file & prior to config file being loaded
+    const std::string DEFAULT_LOG_LEVEL = "INFO";
     class Config
     {
         private:
@@ -13,7 +16,7 @@ namespace lc32sim {
             Config();
             Config(Config const&) = delete;
             void operator=(Config const&) = delete;
-            void load_config_file(std::string filename);
+            void load_config(argparse::ArgumentParser program);
 
             // Default values for config options
             struct {
@@ -25,7 +28,7 @@ namespace lc32sim {
                 bool accelerated_rendering = true;
             } display;
             bool allow_unaligned_access = false;
-            std::string log_level = "INFO";
+            std::string log_level = DEFAULT_LOG_LEVEL;
 
     };
     // This is where you "register" a new option
@@ -39,5 +42,6 @@ namespace lc32sim {
         X(allow_unaligned_access) \
         X(log_level) \
 
+    extern class Config config_instance;
     extern const class Config &Config;
 }

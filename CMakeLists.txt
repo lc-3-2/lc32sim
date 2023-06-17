@@ -1,15 +1,25 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.14)
 project(lc32sim VERSION 0.1
                 LANGUAGES CXX)
 
+# SDL2 is required for the display
 find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIRS})
 
+# Boost is used for config file parsing and general utilities
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 find_package(Boost 1.78.0 REQUIRED COMPONENTS )
 include_directories(${Boost_INCLUDE_DIRS})
+
+# Argparse is used for command line argument parsing
+include(FetchContent)
+FetchContent_Declare(
+    argparse
+    GIT_REPOSITORY https://github.com/p-ranav/argparse.git
+)
+FetchContent_MakeAvailable(argparse)
 
 set(SOURCES
     src/config.cpp
@@ -56,4 +66,4 @@ target_compile_options(lc32sim PRIVATE "$<$<CONFIG:DEBUG>:${DBGINFO_FLAGS}>")
 target_compile_options(lc32sim PRIVATE "$<$<CONFIG:RELEASE>:${RELEASE_FLAGS}>")
 target_compile_options(lc32sim PRIVATE "$<$<CONFIG:RELEASE_DBGINFO>:${RELEASE_FLAGS}>")
 target_compile_options(lc32sim PRIVATE "$<$<CONFIG:RELEASE_DBGINFO>:${DBGINFO_FLAGS}>")
-target_link_libraries(lc32sim PRIVATE ${SDL2_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(lc32sim PRIVATE ${SDL2_LIBRARIES} ${Boost_LIBRARIES} argparse)

@@ -53,39 +53,38 @@ namespace lc32sim {
         SDL_RenderPresent(this->renderer);
     }
 
-    void Display::loop() {
+    bool Display::iterate() {
         if (!this->initialized) {
             throw DisplayException("Display not initialized");
         }
-        while (true) {
-            SDL_Event e;
-            SDL_PollEvent(&e);
-            if (e.type == SDL_QUIT) {
-                this->initialized = false;
-                SDL_DestroyRenderer(this->renderer);
-                SDL_DestroyWindow(this->window);
-                SDL_Quit();
-                break;
-            } else if (e.type == Display::LC32_EVENT_DRAWPIXELS) {
-                uint32_t start_pos = static_cast<uint32_t>(e.user.code);
-                uintptr_t num_pixels = reinterpret_cast<uintptr_t>(e.user.data1);
-                uint16_t *buffer = static_cast<uint16_t*>(e.user.data2);
+        SDL_Event e;
+        SDL_PollEvent(&e);
+        if (e.type == SDL_QUIT) {
+            this->initialized = false;
+            SDL_DestroyRenderer(this->renderer);
+            SDL_DestroyWindow(this->window);
+            SDL_Quit();
+            return false;
+        } else if (e.type == Display::LC32_EVENT_DRAWPIXELS) {
+            uint32_t start_pos = static_cast<uint32_t>(e.user.code);
+            uintptr_t num_pixels = reinterpret_cast<uintptr_t>(e.user.data1);
+            uint16_t *buffer = static_cast<uint16_t*>(e.user.data2);
 
-                for (uintptr_t i = 0; i < num_pixels; i++) {
-                    int row = (start_pos + i) / Config.display.width;
-                    int col = (start_pos + i) % Config.display.width;
-                    uint16_t pixel = buffer[i];
-                    uint8_t r = (pixel & 0x7C00) >> 7;
-                    uint8_t g = (pixel & 0x03E0) >> 2;
-                    uint8_t b = (pixel & 0x001F) << 3;
-                    SDL_SetRenderDrawColor(this->renderer, r, g, b, 0xFF);
-                    SDL_RenderDrawPoint(this->renderer, col, row);
-                }
-
-            } else if (e.type == LC32_EVENT_PRESENT) {
-                SDL_RenderPresent(this->renderer);
+            for (uintptr_t i = 0; i < num_pixels; i++) {
+                int row = (start_pos + i) / Config.display.width;
+                int col = (start_pos + i) % Config.display.width;
+                uint16_t pixel = buffer[i];
+                uint8_t r = (pixel & 0x7C00) >> 7;
+                uint8_t g = (pixel & 0x03E0) >> 2;
+                uint8_t b = (pixel & 0x001F) << 3;
+                SDL_SetRenderDrawColor(this->renderer, r, g, b, 0xFF);
+                SDL_RenderDrawPoint(this->renderer, col, row);
             }
+
+        } else if (e.type == LC32_EVENT_PRESENT) {
+            SDL_RenderPresent(this->renderer);
         }
+        return true;
     }
     void Display::draw(uint16_t *video_buffer) {
         #ifdef DEBUG_CHECKS
