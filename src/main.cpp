@@ -20,8 +20,8 @@ int main(int argc, char *argv[]) {
     argparse::ArgumentParser program("lc32sim", VERSION);
     program.add_argument("file").help("LC-3.2 ELF executable to simulate");
     program.add_argument("-c", "--config-file").help("path to a JSON-formatted config file").default_value(std::string("./lc32sim.json"));
-    program.add_argument("-s", "--software-rendering").help("disable hardware-accelerated rendering if enabled in config").default_value(false).implicit_value(true);
-    program.add_argument("-l", "--log-level").help("set log level").default_value(std::string("use-config"));
+    program.add_argument("-s", "--software-rendering").help("disable hardware-accelerated rendering, even if enabled in config").default_value(false).implicit_value(true);
+    program.add_argument("-l", "--log-level").help("set minimum log level to be displayed; lower levels are suppressed").default_value(std::string("use-config"));
     program.add_argument("-H", "--headless").help("run simulator without a display").default_value(false).implicit_value(true);
 
     try {
