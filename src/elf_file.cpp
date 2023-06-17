@@ -98,30 +98,6 @@ namespace lc32sim {
             }
             file.seekg(phentsize_diff, std::ios::cur);
         }
-
-        // Dump all ELF header information
-        // std::cout << "ELF header:" << std::endl;
-        // std::cout << "    magic number: 0x" << std::hex << +ei.magic[0] << +ei.magic[1] << +ei.magic[2] << +ei.magic[3] << std::endl;
-        // std::cout << "    class: " << std::dec << +ei._class << std::endl;
-        // std::cout << "    data encoding: " << +ei.data << std::endl;
-        // std::cout << "    version: " << +ei.version << std::endl;
-        // std::cout << "    os_abi: " << +ei.os_abi << std::endl;
-        // std::cout << "    abi_version: " << +ei.abi_version << std::endl;
-        // std::cout << "    type: " << +eh.type << std::endl;
-        // std::cout << "    machine: " << +eh.machine << std::endl;
-        // std::cout << "    version: " << +eh.version << std::endl;
-        // std::cout << "    entry point: 0x" << std::hex << +eh.entry << std::endl;
-        // std::cout << "    program header offset: 0x" << std::hex << +eh.phoff << std::endl;
-        // std::cout << "    section header offset: 0x" << std::hex << +eh.shoff << std::endl;
-        // std::cout << "    flags: 0x" << std::hex << +eh.flags << std::endl;
-        // std::cout << "    header size: " << std::dec << +eh.ehsize << std::endl;
-        // std::cout << "    program header entry size: " << +eh.phentsize << std::endl;
-        // std::cout << "    program header entry count: " << +eh.phnum << std::endl;
-        // std::cout << "    section header entry size: " << +eh.shentsize << std::endl;
-        // std::cout << "    section header entry count: " << +eh.shnum << std::endl;
-        // std::cout << "    section header string table index: " << +eh.shstrndx << std::endl;
-        // std::cout << "reverse: " << reverse << std::endl;
-
     }
     ELFFile::~ELFFile() {
         file.close();

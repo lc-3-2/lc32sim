@@ -5,48 +5,54 @@
 
 #include "config.hpp"
 #include "exceptions.hpp"
+#include "log.hpp"
 
 namespace lc32sim {
     // `instance` is modifiable, but only available in this file
     // `Config` is const and available everywhere that includes config.hpp
-    class Config instance;
-    const class Config &Config = instance;
+    class Config config_instance;
+    const class Config &Config = config_instance;
 
-    #define get_config(name, type) this->name = data.get<type>(#name, this->name)
     Config::Config() {
-        if (this != &instance) {
+        if (this != &config_instance) {
             throw SimulatorException("Config should not be instantiated directly");
         }
+    }
 
+    void Config::load_config_file(std::string filename) {
         // Check for existence of config file
-        std::ifstream config_file(CONFIG_FILE_NAME);
-        if (!config_file.good()) {
-            std::cout << "No config file found, using defaults" << std::endl;
+        std::ifstream config_file(filename);
+        std::string config_message = "No config file found, using defaults";
 
-        } else {
+        if (config_file.good()) {
             boost::property_tree::ptree data;
             boost::property_tree::read_json(config_file, data);
 
             try {
-                get_config(display.width, int);
-                get_config(display.height, int);
-                get_config(display.hblank_length, int);
-                get_config(display.vblank_length, int);
-                get_config(display.frames_per_second, double);
-                get_config(display.accelerated_rendering, bool);
-                get_config(allow_unaligned_access, bool);
+                #define get_config(name) this->name = data.get<decltype(name)>(#name, this->name);
+                FOR_EACH_CONFIG_OPTION(get_config);
             } catch (boost::property_tree::json_parser::json_parser_error &e) {
                 throw SimulatorException("JSON parsing error: " + std::string(e.what()));
             }
 
-            std::cout << "Config loaded" << std::endl;
+            config_message = "Config loaded";
         }
-        std::cout << "\tDisplay width: " << display.width << std::endl;
-        std::cout << "\tDisplay height: " << display.height << std::endl;
-        std::cout << "\tDisplay hblank length: " << display.hblank_length << std::endl;
-        std::cout << "\tDisplay vblank length: " << display.vblank_length << std::endl;
-        std::cout << "\tDisplay frames per second: " << display.frames_per_second << std::endl;
-        std::cout << "\tDisplay accelerated rendering: " << (display.accelerated_rendering ? "true" : "false") << std::endl;
-        std::cout << "\tAllow unaligned access: " << (allow_unaligned_access ? "true" : "false") << std::endl;
+
+        try {
+            logger.initialize(log_level);
+        } catch (std::invalid_argument &e) {
+            logger.initialize("info");
+            logger.error << "Invalid log level: " << log_level << ". Using default (INFO).";
+        }
+
+        logger.info << config_message;
+        logger.info << "    Display width: " << display.width;
+        logger.info << "    Display height: " << display.height;
+        logger.info << "    HBlank length: " << display.hblank_length;
+        logger.info << "    VBlank length: " << display.vblank_length;
+        logger.info << "    Render FPS: " << display.frames_per_second;
+        logger.info << "    Accelerated rendering: " << (display.accelerated_rendering ? "true" : "false");
+        logger.info << "    Allow unaligned access: " << (allow_unaligned_access ? "true" : "false");
+        logger.info << "    Log level: " << log_level;
     }
 }

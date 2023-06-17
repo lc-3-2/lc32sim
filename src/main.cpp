@@ -1,6 +1,10 @@
 #include <bitset>
+#include <csignal>
+#include <exception>
+#include <functional>
 #include <iostream>
 
+#include "config.hpp"
 #include "elf_file.hpp"
 #include "instruction.hpp"
 #include "memory.hpp"
@@ -34,11 +38,16 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    // const_cast is a necessary evil for now. TODO: figure out a better approach.
+    const_cast<class Config&>(Config).load_config_file("lc32sim.json");
+
     ELFFile elf(argv[1]);
     unique_ptr<Simulator> simptr = make_unique<Simulator>(42);
     Simulator &sim = *simptr;
     sim.mem.load_elf(elf);
-    // sim.mem.write<uint16_t>(0x30000000, 0xe006);
+
+    // sim.mem.write<uint16_t>(0x30000000, 0xe006); // patch to fix initial version of hello_world executable.
+
     // cout << ".text section dump: " << endl;
     // Instruction inst;
     // for (uint32_t i = 0x30000000; i < 0x30000000 + 0xb4; i += 2) {
@@ -46,35 +55,11 @@ int main(int argc, char *argv[]) {
     //     inst = Instruction(inst_val);
     //     cout << "0x" << hex << i << ": 0x" << hex << inst_val << " (" << inst << ")" << endl;
     // }
-    sim.pc = elf.get_header().entry;    
-    // cout << "Final register values:" << endl;
-    // for (unsigned i = 0; i < sizeof(sim.regs)/sizeof(sim.regs[0]); i++) {
-    //     cout << "R" << dec << i << ": 0x" << hex << sim.regs[i] << " (" << dec << static_cast<int32_t>(sim.regs[i]) << ")" << endl;
-    // }
-    // cout << "PC: 0x" << hex << sim.pc << endl;
-    // cout << "cc: " << bitset<3>(sim.cond) << endl;
 
-    // uint16_t *video_buffer = sim.mem.get_video_buffer();
-    // // Auto generate a rainbow pattern
-    // for (unsigned int row = 0; row < 480; row++) {
-    //     for (unsigned int col = 0; col < 640; col++) {
-    //         uint8_t r = (row * 31) / 480;
-    //         uint8_t g = (col * 31) / 640;
-    //         uint8_t b = ((row + col) * 31) / (480 + 640);
-    //         video_buffer[row * 640 + col] = (r << 10) | (g << 5) | b;
-    //     }
-    // }
-
-    sim.run_sim_with_display();
-
-    // Dumping video buffer
-    // cout << "Video buffer dump:" << endl;
-    // for (unsigned int row = 0; row < 480; row++) {
-    //     for (unsigned int col = 0; col < 640; col++) {
-    //         cout << hex << sim.mem.read<uint16_t>(IO_SPACE_ADDR + (row * 640 + col) * 2) << " ";
-    //     }
-    //     cout << endl;
-    // }
-
+    sim.pc = elf.get_header().entry;
+    sim.launch_sim_thread();
+    while (sim.running) {
+        this_thread::sleep_for(chrono::milliseconds(100));
+    }
     return 0;
 }

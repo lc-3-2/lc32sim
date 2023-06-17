@@ -16,6 +16,7 @@ set(SOURCES
     src/display.cpp
     src/elf_file.cpp
     src/instruction.cpp
+    src/log.cpp
     src/main.cpp
     src/memory.cpp
     src/sim.cpp

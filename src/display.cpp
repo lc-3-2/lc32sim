@@ -46,7 +46,6 @@ namespace lc32sim {
 
         int render_width, render_height;
         SDL_GetRendererOutputSize(this->renderer, &render_width, &render_height);
-        std::cout << "Window size: " << render_width << "x" << render_height << std::endl;
         SDL_RenderSetScale(renderer, render_width / Config.display.width, render_height / Config.display.height);
 
         SDL_SetRenderDrawColor(this->renderer, 0xFF, 0xFF, 0xFF, 0xFF);
@@ -102,10 +101,8 @@ namespace lc32sim {
             // We need to draw the previous frame
             uintptr_t num_pixels = (Config.display.width * Config.display.height) - this->next_to_draw;
             if (num_pixels > 0) {
-                std::cout << "Drawing " << std::dec << num_pixels << " pixels #1" << std::endl;
                 push_draw_event(this->next_to_draw, num_pixels, video_buffer);
             }
-            std::cout << "Presenting frame" << std::endl;
             push_present_event();
             this->next_to_draw = 0;
             // Loop to skip frames if we're too far behind
@@ -119,7 +116,6 @@ namespace lc32sim {
             int end_pos = (current_row * Config.display.width) + current_col;
             if (end_pos >= this->next_to_draw) {
                 uintptr_t num_pixels = end_pos - this->next_to_draw + 1;
-                std::cout << "Drawing " << std::dec << num_pixels << " pixels #2" << std::endl;
                 push_draw_event(this->next_to_draw, num_pixels, video_buffer);
                 this->next_to_draw = end_pos + 1;
             }

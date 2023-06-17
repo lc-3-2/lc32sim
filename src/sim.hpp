@@ -24,19 +24,18 @@ namespace lc32sim {
             volatile bool running;
             uint32_t pc;
             uint32_t regs[8];
-            Display display;
             Memory mem;
             std::unique_ptr<uint16_t[]> video_buffer;
             uint8_t cond;
             std::thread sim_thread;
 
             void setcc(uint32_t val);
-            void simulate();
+            void simulate(Display *display);
         public:
             Simulator(unsigned int seed);
             ~Simulator();
             void launch_sim_thread();
-            void run_sim_with_display();
+            void launch_sim_thread_with_display(Display &display);
             void stop_sim();
     };
 }

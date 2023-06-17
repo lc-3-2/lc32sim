@@ -3,7 +3,7 @@
 
 template<std::size_t from, std::size_t to>
 inline uint32_t sext(uint32_t val) {
-    static_assert(from <= to, "`from` must be less than or equal to to");
+    static_assert(from < to, "`from` must be less than to");
     static_assert(to <= 32, "`to` must be less than or equal to 32");
 
     constexpr uint32_t sign_bit = static_cast<uint32_t>(1) << (from - 1);
