@@ -28,6 +28,7 @@ namespace lc32sim {
             std::unique_ptr<uint16_t[]> video_buffer;
             uint8_t cond;
             std::thread sim_thread;
+            std::exception_ptr sim_thread_exception;
 
             void setcc(uint32_t val);
             void simulate(Display *display);
@@ -37,5 +38,6 @@ namespace lc32sim {
             void launch_sim_thread();
             void launch_sim_thread_with_display(Display &display);
             void stop_sim();
+            void join_sim();
     };
 }

@@ -200,8 +200,8 @@ namespace lc32sim {
                 if (display != nullptr) {
                     display->draw(mem.get_video_buffer());
                 }
-            } catch (const SimulatorException &e) {
-                logger.fatal << "Exception occurred in simulation: " << e.what();
+            } catch (...) {
+                this->sim_thread_exception = std::current_exception();
                 this->running = false;
             }
         }
@@ -244,5 +244,14 @@ namespace lc32sim {
             logger.info << "    R" << i << ": "
                 << std::hex << std::setfill('0') << std::setw(8)
                 << this->regs[i];
+    }
+
+    void Simulator::join_sim() {
+        if (this->sim_thread.joinable()) {
+            this->sim_thread.join();
+        }
+        if (this->sim_thread_exception != nullptr) {
+            std::rethrow_exception(this->sim_thread_exception);
+        }
     }
 }

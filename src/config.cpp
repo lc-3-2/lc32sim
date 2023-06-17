@@ -41,7 +41,7 @@ namespace lc32sim {
         try {
             logger.initialize(log_level);
         } catch (std::invalid_argument &e) {
-            logger.initialize("info");
+            logger.initialize(this->log_level);
             logger.error << "Invalid log level: " << log_level << ". Using default (INFO).";
         }
 

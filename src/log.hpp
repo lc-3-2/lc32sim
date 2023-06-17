@@ -6,8 +6,21 @@
 
 #include "config.hpp"
 
-enum class LogLevel : size_t {
-    DEBUG, INFO, WARN, ERROR, FATAL,
+// Three pieces of information used to define each log level:
+// (1) name of the log level (used in enum and as prefix for log messages)
+// (2) name of the variable used to access the log level (e.g. `logger.debug`)
+// (3) stream to which log messages should be written
+#define FOR_EACH_LOG_LEVEL(X) \
+    X(DEBUG, debug, std::cout) \
+    X(INFO, info, std::cout) \
+    X(WARN, warn, std::cout) \
+    X(ERROR, error, std::cerr) \
+    X(FATAL, fatal, std::cerr)
+
+enum class LogLevel {
+    #define initialize_enum(level, lower, stream) level,
+    FOR_EACH_LOG_LEVEL(initialize_enum)
+    #undef initialize_enum
     NUM_LOG_LEVELS
 };
 inline bool operator<=(LogLevel a, LogLevel b) {
@@ -55,7 +68,10 @@ class Log {
 
 class Logger {
     public:
-        Log debug, info, warn, error, fatal;
+        #define declare_log(level, lower, stream) Log lower;
+        FOR_EACH_LOG_LEVEL(declare_log)
+        #undef declare_log
+
         void initialize(std::string log_level_string);
         Logger() = default;
 

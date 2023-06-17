@@ -25,7 +25,7 @@ namespace lc32sim {
                 bool accelerated_rendering = true;
             } display;
             bool allow_unaligned_access = false;
-            std::string log_level = "info";
+            std::string log_level = "INFO";
 
     };
     // This is where you "register" a new option

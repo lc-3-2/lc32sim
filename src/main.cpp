@@ -58,8 +58,6 @@ int main(int argc, char *argv[]) {
 
     sim.pc = elf.get_header().entry;
     sim.launch_sim_thread();
-    while (sim.running) {
-        this_thread::sleep_for(chrono::milliseconds(100));
-    }
+    sim.join_sim();
     return 0;
 }
