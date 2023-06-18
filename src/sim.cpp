@@ -236,7 +236,7 @@ namespace lc32sim {
         }
     }
 
-    void Simulator::dump_state(Log log) {
+    void Simulator::dump_state(Log &log) {
         log << "    PC: "
             << std::hex << std::setfill('0') << std::setw(8)
             << this->pc;
