@@ -11,6 +11,8 @@
 namespace lc32sim {
     class Simulator {
         private:
+            std::exception_ptr sim_thread_exception;
+
             /*!
              * \brief Dumps the state of the machine to `cout`
              *
@@ -19,10 +21,9 @@ namespace lc32sim {
              *
              * @param[in] log The log to dump to, like `logger.info`
              */
-            void dump_state(Log log);
-
-        // TODO: figure out exactly what the public interface should be
-        // private:
+            void dump_state(Log &log);
+            void setcc(uint32_t val);
+            void simulate(Display *display);
         public:
             volatile bool running;
             uint32_t pc;
@@ -31,11 +32,7 @@ namespace lc32sim {
             std::unique_ptr<uint16_t[]> video_buffer;
             uint8_t cond;
             std::thread sim_thread;
-            std::exception_ptr sim_thread_exception;
 
-            void setcc(uint32_t val);
-            void simulate(Display *display);
-        public:
             Simulator(unsigned int seed);
             ~Simulator();
             void launch_sim_thread();
