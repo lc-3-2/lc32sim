@@ -13,18 +13,37 @@
       pkgs = nixpkgs-23-05.legacyPackages.${system};
       inherit (pkgs) stdenv;
 
-      buildInputs = [
-        pkgs.boost
-      ];
+      buildInputs = [];
       nativeBuildInputs = [
         pkgs.cmake
         pkgs.ninja
+        pkgs.boost
+        pkgs.argparse
         pkgs.git
       ];
       propagatedBuildInputs = [
         pkgs.SDL2
       ];
     in {
+
+      packages = rec {
+        default = lc-3-2;
+
+        lc-3-2 = stdenv.mkDerivation {
+          inherit name buildInputs nativeBuildInputs propagatedBuildInputs;
+
+          src = self;
+
+          configurePhase = ''
+            cmake -G Ninja -B ./build/ -S . \
+              -DCMAKE_INSTALL_PREFIX=$out -DCMAKE_BUILD_TYPE=Release \
+              -DLC32SIM_SYSTEM_ARGPARSE=ON
+          '';
+
+          buildPhase = "ninja -v -C ./build/";
+          installPhase = "ninja -v -C ./build/ install";
+        };
+      };
 
       devShells = rec {
         default = lc32sim;

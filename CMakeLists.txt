@@ -14,19 +14,33 @@ find_package(Boost 1.78.0 REQUIRED COMPONENTS )
 include_directories(${Boost_INCLUDE_DIRS})
 
 # Argparse is used for command line argument parsing
-# We have to use a custom setup for FetchContent_MakeAvailable because we don't
-# want to install these dependencies.
-# See: https://cmake.org/cmake/help/v3.19/module/FetchContent.html
-include(FetchContent)
-FetchContent_Declare(
-    argparse
-    GIT_REPOSITORY https://github.com/p-ranav/argparse.git
-    GIT_TAG 997da9255618311d1fcb0135ce86022729d1f1cb
-)
-FetchContent_GetProperties(argparse)
-if(NOT argparse_POPULATED)
-  FetchContent_Populate(argparse)
-  add_subdirectory(${argparse_SOURCE_DIR} ${argparse_BINARY_DIR} EXCLUDE_FROM_ALL)
+# This might be installed globally, in the case of a flake build. Therefore, add
+# an option for that, which is off by default.
+option(LC32SIM_SYSTEM_ARGPARSE "Use the version of `argparse` installed on the system" OFF)
+if(NOT LC32SIM_SYSTEM_ARGPARSE)
+    # We have to use a custom setup for FetchContent_MakeAvailable because we
+    # don't want to install these dependencies.
+    # See: https://cmake.org/cmake/help/v3.19/module/FetchContent.html
+    include(FetchContent)
+    FetchContent_Declare(
+        argparse
+        GIT_REPOSITORY https://github.com/p-ranav/argparse.git
+        GIT_TAG 997da9255618311d1fcb0135ce86022729d1f1cb
+    )
+    FetchContent_GetProperties(argparse)
+    if(NOT argparse_POPULATED)
+        FetchContent_Populate(argparse)
+        add_subdirectory(${argparse_SOURCE_DIR} ${argparse_BINARY_DIR} EXCLUDE_FROM_ALL)
+    endif()
+else()
+    find_package(argparse 2.9.0 REQUIRED)
+endif()
+# Need to populate variables for argparse
+# Include directories are handled automatically, either by linking with the
+# library or because they are found by the compiler. We only need to link with
+# the target if we're using our own.
+if(NOT LC32SIM_SYSTEM_ARGPARSE)
+    set(argparse_LIBRARIES "argparse")
 endif()
 
 set(SOURCES
@@ -74,6 +88,6 @@ target_compile_options(lc32sim PRIVATE "$<$<CONFIG:DEBUG>:${DBGINFO_FLAGS}>")
 target_compile_options(lc32sim PRIVATE "$<$<CONFIG:RELEASE>:${RELEASE_FLAGS}>")
 target_compile_options(lc32sim PRIVATE "$<$<CONFIG:RELEASE_DBGINFO>:${RELEASE_FLAGS}>")
 target_compile_options(lc32sim PRIVATE "$<$<CONFIG:RELEASE_DBGINFO>:${DBGINFO_FLAGS}>")
-target_link_libraries(lc32sim PRIVATE ${SDL2_LIBRARIES} ${Boost_LIBRARIES} argparse)
+target_link_libraries(lc32sim PRIVATE ${SDL2_LIBRARIES} ${Boost_LIBRARIES} ${argparse_LIBRARIES})
 
 install(TARGETS lc32sim)
