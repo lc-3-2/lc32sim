@@ -114,7 +114,6 @@ namespace lc32sim {
                         break;
                     case InstructionType::LEA:
                         regs[i.data.lea.dr] = pc + i.data.lea.pcoffset9;
-                        setcc(regs[i.data.load.dr]);
                         break;
                     case InstructionType::RTI:
                         throw SimulatorException("simulate(): RTI not implemented");
