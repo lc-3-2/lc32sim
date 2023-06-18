@@ -17,6 +17,7 @@ namespace lc32sim {
         std::srand(seed);
         this->video_buffer = std::make_unique<uint16_t[]>(Config.display.width * Config.display.height);
         this->running = false;
+        this->cond = std::rand() & 0b111;
         for (size_t i = 0; i < sizeof(this->regs)/sizeof(this->regs[0]); i++) {
             this->regs[i] = std::rand();
         }
