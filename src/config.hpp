@@ -32,6 +32,11 @@ namespace lc32sim {
             struct {
                 bool allow_unaligned_access = false;
                 uint64_t size = (static_cast<uint64_t>(1) << 32);
+                /*
+                 * The simulator page size is the allocation granularity for the simulator's memory.
+                 * It is not necessarily the same as the page size of the host system.
+                 * This does not relate to any virtual memory systems in the simulated system.
+                */
                 uint64_t simulator_page_size = (static_cast<uint64_t>(1) << 12);
             } memory;
 
