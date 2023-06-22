@@ -21,22 +21,23 @@ namespace lc32sim {
 
     void Config::load_config(argparse::ArgumentParser program) {
         // Check for existence of config file
-        std::ifstream config_file(program.get<std::string>("--config-file"));
-        std::string config_message = "No config file found, using defaults";
+        std::string config_file_location = program.get<std::string>("--config-file");
+        std::ifstream config_file(config_file_location);
+        std::string config_message = config_file_location + " not found, using default config";
+        bool config_error = false;
 
         if (config_file.good()) {
             boost::property_tree::ptree data;
-            boost::property_tree::read_json(config_file, data);
-
             try {
+                boost::property_tree::read_json(config_file, data);
                 #define get_config(name, description) this->name = data.get<decltype(name)>(#name, this->name);
                 FOR_EACH_CONFIG_OPTION(get_config);
                 #undef get_config
+                config_message = "Config loaded successfully";
             } catch (boost::property_tree::json_parser::json_parser_error &e) {
-                throw SimulatorException("JSON parsing error: " + std::string(e.what()));
+                config_message = "JSON parsing error: " + std::string(e.what()) + ", using default config";
+                config_error = true;
             }
-
-            config_message = "Config loaded";
         }
 
         // Certain command line options can override config file options
@@ -55,7 +56,7 @@ namespace lc32sim {
             logger.error << "Invalid log level: " << log_level << ". Using default (" << DEFAULT_LOG_LEVEL << ")";
         }
 
-        logger.info << config_message;
+        (config_error ? logger.error : logger.info) << config_message;
         #define log_config(name, description) logger.info << std::boolalpha << "    " << description << ": " << name;
         FOR_EACH_CONFIG_OPTION(log_config);
         #undef log_config
