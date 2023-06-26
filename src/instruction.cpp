@@ -65,8 +65,7 @@ namespace lc32sim {
                     this->data.shift.imm = true;
                     this->data.shift.dr = (instruction_bits & 0x0E00) >> 9;
                     this->data.shift.sr1 = (instruction_bits & 0x01C0) >> 6;
-                    this->data.shift.amount3 = instruction_bits & 0x000F;
-                    this->data.shift.amount3 = this->data.shift.amount3 ? this->data.shift.amount3 : 0x8;
+                    this->data.shift.amount5 = instruction_bits & 0x001F;
                 } else {
                     if (bit4) {
                         this->type = InstructionType::RSHFA;
