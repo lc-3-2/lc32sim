@@ -129,7 +129,7 @@ namespace lc32sim {
                         break;
                     case InstructionType::RSHFA:
                         if (i.data.shift.imm) {
-                            regs[i.data.shift.dr] = static_cast<int32_t>(regs[i.data.shift.sr1]) >> i.data.shift.amount3;
+                            regs[i.data.shift.dr] = static_cast<int32_t>(regs[i.data.shift.sr1]) >> i.data.shift.amount5;
                         } else {
                             regs[i.data.shift.dr] = static_cast<int32_t>(regs[i.data.shift.sr1]) >> regs[i.data.shift.sr2];
                         }

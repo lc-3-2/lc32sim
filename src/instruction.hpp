@@ -66,7 +66,7 @@ namespace lc32sim {
         struct {
             uint8_t dr, sr1, sr2;
             bool imm;
-            uint32_t amount3;
+            uint32_t amount5;
         } shift;
         struct {
             uint8_t sr, baseR;
@@ -126,7 +126,7 @@ namespace lc32sim {
                 break;
             shift:
                 stream << "R" << +i.data.shift.dr << ", R" << +i.data.shift.sr1 << ", ";
-                if (i.data.shift.imm) stream << "#" << +i.data.shift.amount3;
+                if (i.data.shift.imm) stream << "#" << i.data.shift.amount5;
                 else stream << "R" << +i.data.shift.sr2;
                 break;
             load:
