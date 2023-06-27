@@ -6,7 +6,7 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs-23-05, systems, flake-utils }@inputs :
+  outputs = { self, nixpkgs-23-05, flake-utils }@inputs :
     flake-utils.lib.eachSystem ["x86_64-linux"] (system:
     let
       name = "lc32sim-dev";
