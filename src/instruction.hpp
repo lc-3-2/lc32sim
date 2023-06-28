@@ -118,7 +118,7 @@ namespace lc32sim {
             case InstructionType::STH: stream << "STH "; goto store;
             case InstructionType::STW: stream << "STW "; goto store;
             case InstructionType::TRAP: stream << "TRAP x" << std::hex << +static_cast<uint8_t>(i.data.trap.trapvect8); break;
-            case InstructionType::XOR: stream << "XOR"; goto arithmetic;
+            case InstructionType::XOR: stream << "XOR "; goto arithmetic;
             arithmetic:
                 stream << "R" << +i.data.arithmetic.dr << ", R" << +i.data.arithmetic.sr1 << ", ";
                 if (i.data.arithmetic.imm) stream << "#" << +i.data.arithmetic.imm5;
