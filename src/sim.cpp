@@ -120,19 +120,24 @@ namespace lc32sim {
                         throw SimulatorException("simulate(): RTI not implemented");
                         break;
                     case InstructionType::LSHF:
-                        regs[i.data.shift.dr] = regs[i.data.shift.sr1] << regs[i.data.shift.sr2];
+                        if (i.data.shift.imm)
+                            regs[i.data.shift.dr] = regs[i.data.shift.sr1] << (i.data.shift.amount3 + 1);
+                        else
+                            regs[i.data.shift.dr] = regs[i.data.shift.sr1] << regs[i.data.shift.sr2];
                         setcc(regs[i.data.shift.dr]);
                             break;
                     case InstructionType::RSHFL:
-                        regs[i.data.shift.dr] = regs[i.data.shift.sr1] >> regs[i.data.shift.sr2];
+                        if (i.data.shift.imm)
+                            regs[i.data.shift.dr] = regs[i.data.shift.sr1] >> (i.data.shift.amount3 + 1);
+                        else
+                            regs[i.data.shift.dr] = regs[i.data.shift.sr1] >> regs[i.data.shift.sr2];
                         setcc(regs[i.data.shift.dr]);
                         break;
                     case InstructionType::RSHFA:
-                        if (i.data.shift.imm) {
-                            regs[i.data.shift.dr] = static_cast<int32_t>(regs[i.data.shift.sr1]) >> i.data.shift.amount5;
-                        } else {
+                        if (i.data.shift.imm)
+                            regs[i.data.shift.dr] = static_cast<int32_t>(regs[i.data.shift.sr1]) >> (i.data.shift.amount3 + 1);
+                        else
                             regs[i.data.shift.dr] = static_cast<int32_t>(regs[i.data.shift.sr1]) >> regs[i.data.shift.sr2];
-                        }
                         setcc(regs[i.data.shift.dr]);
                         break;
                     case InstructionType::STB:

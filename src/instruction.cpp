@@ -57,28 +57,39 @@ namespace lc32sim {
                 this->type = InstructionType::RTI;
                 break;
             case 0b1101: {
-                bool bit3 = instruction_bits & 0x0008;
-                bool bit4 = instruction_bits & 0x0010;
-                bool bit5 = instruction_bits & 0x0020;
-                if (bit5) {
-                    this->type = InstructionType::RSHFA;
-                    this->data.shift.imm = true;
-                    this->data.shift.dr = (instruction_bits & 0x0E00) >> 9;
-                    this->data.shift.sr1 = (instruction_bits & 0x01C0) >> 6;
-                    this->data.shift.amount5 = instruction_bits & 0x001F;
-                } else {
-                    if (bit4) {
+                // Pull out the relevant bits
+                // These are non-zero if set, zero if not
+                bool d_bit = instruction_bits & 0x0008;
+                bool a_bit = instruction_bits & 0x0010;
+                bool i_bit = instruction_bits & 0x0020;
+                // Decode the instruction type depending on bits 4 and 3
+                // The case of A=1 and D=0 is handled as LSHF
+                if (d_bit) {
+                    // D=1 - right shift
+                    // Here, arithmetic and logical are different
+                    if (a_bit)
                         this->type = InstructionType::RSHFA;
-                    } else if (bit3) {
+                    else
                         this->type = InstructionType::RSHFL;
-                    } else {
-                        this->type = InstructionType::LSHF;
-                    }
+                } else {
+                    // D=0 - left shift
+                    // Doesn't matter if arithmetic or logical - it's the same
+                    // operation
+                    this->type = InstructionType::LSHF;
+                }
+                // Set the DR and SR1; they are common for all shifts
+                this->data.shift.dr = (instruction_bits & 0x0E00) >> 9;
+                this->data.shift.sr1 = (instruction_bits & 0x01C0) >> 6;
+                // Either set SR2 or amount3 depending on bit 5
+                // The incrementing of amount3 should be handled in `sim.cpp`
+                if (i_bit) {
+                    this->data.shift.imm = true;
+                    this->data.shift.amount3 = instruction_bits & 0x0007;
+                } else {
                     this->data.shift.imm = false;
-                    this->data.shift.dr = (instruction_bits & 0x0E00) >> 9;
-                    this->data.shift.sr1 = (instruction_bits & 0x01C0) >> 6;
                     this->data.shift.sr2 = instruction_bits & 0x0007;
                 }
+                // Done
                 break;
             }
             case 0b0011:
