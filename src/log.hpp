@@ -11,6 +11,7 @@
 // (2) name of the variable used to access the log level (e.g. `logger.debug`)
 // (3) stream to which log messages should be written
 #define FOR_EACH_LOG_LEVEL(X) \
+    X(TRACE, trace, std::cout) \
     X(DEBUG, debug, std::cout) \
     X(INFO, info, std::cout) \
     X(WARN, warn, std::cout) \

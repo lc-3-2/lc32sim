@@ -26,15 +26,7 @@ namespace lc32sim {
         data = std::make_unique_for_overwrite<uint8_t[]>(Config.memory.size);
         page_initialized = std::make_unique_for_overwrite<bool[]>(NUM_PAGES);
         
-        // Ensure that the video buffer pages are iniitalized so the display doesn't read random garbage
-        uint32_t vbuf_start_page = VIDEO_BUFFER_ADDR / Config.memory.simulator_page_size;
-        uint32_t vbuf_bytes = Config.display.width * Config.display.height * sizeof(uint16_t);
-        uint32_t vbuf_pages = static_cast<uint32_t>((vbuf_bytes / static_cast<double>(Config.memory.simulator_page_size)) + 0.5);
-        for (uint32_t page = vbuf_start_page; page < vbuf_start_page + vbuf_pages; page++) {
-            if (!this->page_initialized[page]) {
-                this->init_page(page);
-            }
-        }
+        this->init_io_devices();
     };
     Memory::Memory() : Memory(0) {}
     Memory::~Memory() {}
@@ -45,7 +37,7 @@ namespace lc32sim {
 
     void Memory::init_page(uint32_t page_num) {
         #ifdef DEBUG_CHECKS
-        if (page_num >= ) {
+        if (page_num >= NUM_PAGES) {
             throw SimulatorException("cannot initialize page " + std::to_string(page_num) + ": page_num out of range");
         }
         if (page_initialized[page_num]) {
@@ -63,6 +55,7 @@ namespace lc32sim {
         }
         page_initialized[page_num] = true;
     }
+
     template<typename T> T Memory::read(uint32_t addr) {
         uint32_t page_num = addr / Config.memory.simulator_page_size;
         if constexpr (sizeof(T) > 1) {
@@ -89,6 +82,7 @@ namespace lc32sim {
             return ret;
         }
     }
+    
     template <typename T> void Memory::write(uint32_t addr, T val) {
         uint32_t page_num = addr / Config.memory.simulator_page_size;
         if constexpr (sizeof(T) > 1) {
@@ -114,6 +108,7 @@ namespace lc32sim {
         *reinterpret_cast<T*>(&this->data[addr]) = val;
     }
 
+    // Templates for read/write functions needed by other files
     template char Memory::read<char>(uint32_t addr);
     template uint8_t Memory::read<uint8_t>(uint32_t addr);
     template uint16_t Memory::read<uint16_t>(uint32_t addr);
@@ -144,6 +139,138 @@ namespace lc32sim {
                 elf.read_chunk(&this->data[ph.vaddr], ph.offset, file_amt);
                 // Set the rest to zero
                 std::memset(&this->data[ph.vaddr + file_amt], 0, zero_amt);
+            }
+        }
+    }
+
+    // Code for handling I/O devices
+    void Memory::init_io_devices() {
+        this->write<uint16_t>(REG_VCOUNT_ADDR, 0);
+        this->write<uint16_t>(REG_KEYINPUT_ADDR, 0xFFFF);
+        this->write<dma::DMAController>(DMA_CONTROLLER_ADDR, dma::DMAController());
+        for (uint32_t pixel = 0; pixel < (Config.display.width * Config.display.height); pixel++) {
+            this->write<uint16_t>(VIDEO_BUFFER_ADDR + (pixel * 2), 0);
+        }
+    }
+
+    void Memory::set_vcount(uint16_t scanline) {
+        this->write<uint16_t>(REG_VCOUNT_ADDR, scanline);
+    }
+
+    uint16_t *Memory::get_reg_keyinput() {
+        return reinterpret_cast<uint16_t*>(&this->data[REG_KEYINPUT_ADDR]);
+    }
+
+    void Memory::handle_dma() {
+        using namespace lc32sim::dma;
+        DMAController dma = this->read<DMAController>(DMA_CONTROLLER_ADDR);
+        uint32_t &src = dma.source;
+        uint32_t &dst = dma.destination;
+        uint32_t &cnt = dma.control;
+
+        if (cnt & DMA_ON) {
+            if ((cnt & DMA_TIMING) != DMA_NOW) {
+                throw SimulatorException("DMA timing besides DMA_NOW not implemented");
+            }
+            if (cnt & DMA_IRQ) {
+                throw SimulatorException("DMA_IRQ not implemented");
+            }
+            if ((cnt & DMA_DESTINATION) == DMA_DESTINATION_RESET) {
+                // Since DMA_TIMING_(H|V)BLANK are not implemented,
+                // these are equivalent
+                cnt &= ~DMA_DESTINATION;
+                cnt |= DMA_DESTINATION_INCREMENT;
+            }
+
+            uint32_t num_transfers = cnt & DMA_NUM_TRANSFERS;
+            uint32_t transfer_size = ((cnt & DMA_WIDTH) == DMA_32 ? 4 : 2);
+            uint32_t total_size = num_transfers * transfer_size;
+
+            int source_increment = 0;
+            int destination_increment = 0;
+
+            // Ensure all source pages are initialized
+            uint32_t start_page = src / Config.memory.simulator_page_size;
+            if ((cnt & DMA_SOURCE) == DMA_SOURCE_INCREMENT) {
+                if ((Config.memory.size - src) < total_size) {
+                    throw SimulatorException("DMA_SOURCE_INCREMENT hits end of memory");
+                }
+                uint32_t end_page = (src + total_size) / Config.memory.simulator_page_size;
+                for (uint32_t page = start_page; page <= end_page; page++) {
+                    if (!this->page_initialized[page]) {
+                        this->init_page(page);
+                    }
+                }
+                source_increment = transfer_size;
+            } else if ((cnt & DMA_SOURCE) == DMA_SOURCE_DECREMENT) {
+                if (src < total_size) {
+                    throw SimulatorException("DMA_SOURCE_DECREMENT hits start of memory");
+                }
+                uint32_t end_page = (src - total_size) / Config.memory.simulator_page_size;
+                for (uint32_t page = start_page; page >= end_page; page--) {
+                    if (!this->page_initialized[page]) {
+                        this->init_page(page);
+                    }
+                }
+                source_increment = -transfer_size;
+            } else if ((cnt & DMA_SOURCE) == DMA_SOURCE_FIXED) {
+                if (!this->page_initialized[start_page]) {
+                    this->init_page(start_page);
+                }   
+            } else {
+                throw SimulatorException("DMA_SOURCE invalid");
+            }
+
+            // Ensure all destination pages are initialized
+            start_page = dst / Config.memory.simulator_page_size;
+            if ((cnt & DMA_DESTINATION) == DMA_DESTINATION_INCREMENT) {
+                if ((Config.memory.size - dst) < total_size) {
+                    throw SimulatorException("DMA_DESTINATION_INCREMENT hits end of memory");
+                }
+                uint32_t end_page = (dst + total_size) / Config.memory.simulator_page_size;
+                for (uint32_t page = start_page; page <= end_page; page++) {
+                    if (!this->page_initialized[page]) {
+                        this->init_page(page);
+                    }
+                }
+                destination_increment = transfer_size;
+            } else if ((cnt & DMA_DESTINATION) == DMA_DESTINATION_DECREMENT) {
+                if (dst < total_size) {
+                    throw SimulatorException("DMA_DESTINATION_DECREMENT hits start of memory");
+                }
+                uint32_t end_page = (dst - total_size) / Config.memory.simulator_page_size;
+                for (uint32_t page = start_page; page >= end_page; page--) {
+                    if (!this->page_initialized[page]) {
+                        this->init_page(page);
+                    }
+                }
+                destination_increment = -transfer_size;
+            } else if ((cnt & DMA_DESTINATION) == DMA_DESTINATION_FIXED) {
+                if (!this->page_initialized[start_page]) {
+                    this->init_page(start_page);
+                }   
+            } else {
+                throw SimulatorException("DMA_DESTINATION invalid");
+            }
+
+            if ((cnt & DMA_WIDTH) == DMA_16) {
+                for (uint32_t i = 0; i < num_transfers; i++) {
+                    uint16_t &data = *reinterpret_cast<uint16_t*>(this->data[src]);
+                    *reinterpret_cast<uint16_t*>(this->data[dst]) = data;
+
+                    src += source_increment;
+                    dst += destination_increment;
+                }
+            } else if ((cnt & DMA_WIDTH) == DMA_32) {
+                for (uint32_t i = 0; i < num_transfers; i++) {
+                    uint32_t &data = *reinterpret_cast<uint32_t*>(this->data[src]);
+                    *reinterpret_cast<uint32_t*>(this->data[dst]) = data;
+
+                    src += source_increment;
+                    dst += destination_increment;
+                }
+            } else {
+                throw SimulatorException("DMA_WIDTH invalid");
             }
         }
     }

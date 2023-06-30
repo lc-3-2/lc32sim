@@ -116,7 +116,7 @@ namespace lc32sim {
     }
 
     // Helper methods
-    void Instruction::parse_arithmetic_instruction(uint16_t instruction_bits) {
+    __attribute__((always_inline)) inline void Instruction::parse_arithmetic_instruction(uint16_t instruction_bits) {
         this->data.arithmetic.dr =  (instruction_bits & 0x0E00) >> 9;
         this->data.arithmetic.sr1 = (instruction_bits & 0x01C0) >> 6;
         this->data.arithmetic.imm = instruction_bits & 0x0020;
@@ -126,12 +126,12 @@ namespace lc32sim {
             this->data.arithmetic.sr2 = instruction_bits & 0x0007;
         }
     }
-    void Instruction::parse_load_instruction(uint16_t instruction_bits) {
+    __attribute__((always_inline)) inline void Instruction::parse_load_instruction(uint16_t instruction_bits) {
         this->data.load.dr = (instruction_bits & 0x0E00) >> 9;
         this->data.load.baseR = (instruction_bits & 0x01C0) >> 6;
         this->data.load.offset6 = sext<6, 32>(instruction_bits & 0x003F);
     }
-    void Instruction::parse_store_instruction(uint16_t instruction_bits) {
+    __attribute__((always_inline)) inline void Instruction::parse_store_instruction(uint16_t instruction_bits) {
         this->data.store.sr = (instruction_bits & 0x0E00) >> 9;
         this->data.store.baseR = (instruction_bits & 0x01C0) >> 6;
         this->data.store.offset6 = sext<6, 32>(instruction_bits & 0x003F);

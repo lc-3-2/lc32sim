@@ -11,8 +11,6 @@
 namespace lc32sim {
     class Simulator {
         private:
-            std::exception_ptr sim_thread_exception;
-
             /*!
              * \brief Dumps the state of the machine to `cout`
              *
@@ -25,19 +23,18 @@ namespace lc32sim {
             void setcc(uint32_t val);
             void simulate(Display *display);
         public:
-            volatile bool running;
+            bool halted;
             uint32_t pc;
             uint32_t regs[8];
             Memory mem;
-            std::unique_ptr<uint16_t[]> video_buffer;
             uint8_t cond;
-            std::thread sim_thread;
 
             Simulator(unsigned int seed);
             ~Simulator();
-            void launch_sim_thread();
-            void launch_sim_thread_with_display(Display &display);
-            void stop_sim();
-            void join_sim();
+            /*!
+            * \brief Single-steps the program currently being executed
+            * \return Whether or not the program is still running
+            */
+            bool step() noexcept;
     };
 }

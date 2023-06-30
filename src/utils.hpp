@@ -19,3 +19,7 @@ inline int32_t sext(int32_t val) {
     uint32_t result = sext<from, to>(*reinterpret_cast<uint32_t*>(&val));
     return *reinterpret_cast<int32_t*>(&result);
 }
+
+// suffix to convert to uint32_t
+constexpr std::uint32_t operator "" _u32(unsigned long long v)
+{ return static_cast<std::uint32_t>(v); }

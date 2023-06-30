@@ -1,5 +1,6 @@
 #include <argparse/argparse.hpp>
 #include <bitset>
+#include <chrono>
 #include <csignal>
 #include <exception>
 #include <functional>
@@ -13,6 +14,7 @@
 #include "sim.hpp"
 
 using lc32sim::logger;
+using lc32sim::Config;
 
 const std::string VERSION = "0.0.1";
 
@@ -51,22 +53,46 @@ int main(int argc, char *argv[]) {
     sim.mem.load_elf(elf);
     sim.pc = elf.get_header().entry;
 
+    std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+    uint64_t instructions_executed = 0;
+
     if (headless) {
-        sim.launch_sim_thread();
-        sim.join_sim();
+        while (sim.step()) {
+            instructions_executed++;
+        }
+        instructions_executed++;
     } else {
         lc32sim::Display display;
         display.initialize();
-        sim.launch_sim_thread_with_display(display);
 
-        while (sim.running) {
-            // iterate() returns false when the window is closed
-            if (!display.iterate()) {
-                sim.stop_sim();
-                break;
+        while (true) {
+            for (unsigned int scanline = 0; scanline < Config.display.height + Config.display.vblank_length; scanline++) {
+                sim.mem.set_vcount(scanline);
+                for (unsigned int instruction = 0; instruction < Config.display.instructions_per_scanline; instruction++) {
+                    instructions_executed++;
+                    if (!sim.step()) {
+                        goto done;
+                    }
+                }
+                
+                if (!display.draw(scanline, sim.mem.get_video_buffer())) {
+                    goto done;
+                }
+                if (display.changed_key) {
+                    uint16_t &reg_keyinput = *sim.mem.get_reg_keyinput();
+                    if (display.changed_key->pressed) {
+                        reg_keyinput &= ~(1 << display.changed_key->map_location);
+                    } else {
+                        reg_keyinput |= (1 << display.changed_key->map_location);
+                    }
+                }
             }
         }
     }
 
+    done:
+    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+    std::chrono::duration<double> elapsed = end - start;
+    logger.info << "Executed " << instructions_executed << " instructions in " << elapsed.count() << " seconds (" << instructions_executed / elapsed.count() << " Hz)";
     return 0;
 }
