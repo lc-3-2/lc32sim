@@ -13,3 +13,9 @@ inline uint32_t sext(uint32_t val) {
     }
     return val;
 }
+
+template <std::size_t from, std::size_t to>
+inline int32_t sext(int32_t val) {
+    uint32_t result = sext<from, to>(*reinterpret_cast<uint32_t*>(&val));
+    return *reinterpret_cast<int32_t*>(&result);
+}

@@ -40,11 +40,11 @@ namespace lc32sim {
         struct {
             uint8_t dr, sr1, sr2;
             bool imm;
-            uint32_t imm5;
+            int32_t imm5;
         } arithmetic;
         struct {
             uint8_t cond;
-            uint32_t pcoffset9;
+            int32_t pcoffset9;
         } br;
         struct {
             uint16_t baseR;
@@ -53,15 +53,15 @@ namespace lc32sim {
             uint8_t baseR;
         } jsrr;
         struct {
-            uint32_t pcoffset11;
+            int32_t pcoffset11;
         } jsr;
         struct {
             uint8_t dr, baseR;
-            uint32_t offset6;
+            int32_t offset6;
         } load;
         struct {
             uint8_t dr;
-            uint32_t pcoffset9;
+            int32_t pcoffset9;
         } lea;
         struct {
             uint8_t dr, sr1, sr2;
@@ -70,7 +70,7 @@ namespace lc32sim {
         } shift;
         struct {
             uint8_t sr, baseR;
-            uint32_t offset6;
+            int32_t offset6;
         } store;
         struct {
             TrapVector trapvect8;
