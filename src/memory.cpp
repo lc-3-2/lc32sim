@@ -134,7 +134,16 @@ namespace lc32sim {
                         this->init_page(page);
                     }
                 }
-                elf.read_chunk(&this->data[ph.vaddr], ph.offset, ph.filesz);
+
+                // Not all the data may be provided by the file. The remainder
+                // should be zeros. Therefore, compute how much will come from
+                // the file and how much will be zeros.
+                uint32_t file_amt = std::min(ph.filesz, ph.memsz);
+                uint32_t zero_amt = ph.memsz <= ph.filesz ? UINT32_C(0) : ph.memsz - ph.filesz;
+                // Populate from the file
+                elf.read_chunk(&this->data[ph.vaddr], ph.offset, file_amt);
+                // Set the rest to zero
+                std::memset(&this->data[ph.vaddr + file_amt], 0, zero_amt);
             }
         }
     }
