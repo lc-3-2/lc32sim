@@ -56,6 +56,9 @@ int main(int argc, char *argv[]) {
     std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
     uint64_t instructions_executed = 0;
 
+    // todo remove
+    uint64_t vsyncs = 0;
+
     if (headless) {
         while (sim.step()) {
             instructions_executed++;
@@ -63,8 +66,6 @@ int main(int argc, char *argv[]) {
         instructions_executed++;
     } else {
         lc32sim::Display display;
-        display.initialize();
-
         while (true) {
             for (unsigned int scanline = 0; scanline < Config.display.height + Config.display.vblank_length; scanline++) {
                 sim.mem.set_vcount(scanline);
@@ -87,6 +88,7 @@ int main(int argc, char *argv[]) {
                     }
                 }
             }
+            vsyncs++;
         }
     }
 
@@ -94,5 +96,6 @@ int main(int argc, char *argv[]) {
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
     std::chrono::duration<double> elapsed = end - start;
     logger.info << "Executed " << instructions_executed << " instructions in " << elapsed.count() << " seconds (" << instructions_executed / elapsed.count() << " Hz)";
+    logger.info << "Vsyncs: " << vsyncs << ", Vsyncs/second " << vsyncs / elapsed.count();
     return 0;
 }

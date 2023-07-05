@@ -12,7 +12,9 @@ namespace lc32sim {
     
     class Display {
         private:
-            bool initialized = false;
+            double target_time = 0;
+            double ticks_per_frame;
+
             SDL_Renderer *renderer = nullptr;
             SDL_Window *window = nullptr;
             SDL_Texture *texture = nullptr;
@@ -24,7 +26,6 @@ namespace lc32sim {
             Keybind keys[10];
 
             Display();
-            void initialize();
             bool draw(unsigned int scanline, uint16_t *video_buffer);
     };
 }

@@ -6,16 +6,10 @@
 #include "log.hpp"
 
 namespace lc32sim {
-    Display::Display() = default;
-
-    void Display::initialize() {
-        if (this->initialized) {
-            throw DisplayException("Display already initialized");
-        }
-        this->initialized = true;
+    Display::Display() {
+        this->ticks_per_frame = 1000.0 / Config.display.frames_per_second;
 
         int renderer_flags = Config.display.accelerated_rendering ? SDL_RENDERER_ACCELERATED : SDL_RENDERER_SOFTWARE;
-        renderer_flags |= SDL_RENDERER_PRESENTVSYNC;
         const int window_flags = SDL_WINDOW_ALLOW_HIGHDPI;
 
         if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -70,14 +64,10 @@ namespace lc32sim {
     }
 
     bool Display::draw(unsigned int scanline, uint16_t *video_buffer) {
-        if (!this->initialized) {
-            throw DisplayException("Display not initialized");
-        }
         this->changed_key = nullptr;
         SDL_Event e;
         if (SDL_PollEvent(&e)) {
             if (e.type == SDL_QUIT) {
-                this->initialized = false;
                 SDL_DestroyRenderer(this->renderer);
                 SDL_DestroyWindow(this->window);
                 SDL_Quit();
@@ -107,8 +97,17 @@ namespace lc32sim {
 
         if (scanline == Config.display.height - 1) {
             SDL_RenderCopy(this->renderer, this->texture, nullptr, nullptr);
-            // Note: this call blocks until the next vsync
-            SDL_RenderPresent(this->renderer);
+            if (this->target_time == 0) {
+                this->target_time = static_cast<double>(SDL_GetTicks());
+                SDL_RenderPresent(this->renderer);
+            } else {
+                uint64_t target_time_int = static_cast<uint64_t>(this->target_time);
+                while (target_time_int > SDL_GetTicks()) {
+                    SDL_Delay(1);
+                }
+                SDL_RenderPresent(this->renderer);
+                this->target_time += this->ticks_per_frame;
+            }
         }
         return true;
     }
