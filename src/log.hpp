@@ -57,6 +57,9 @@ namespace lc32sim {
             Log(std::string prefix) : out(nullptr), prefix(prefix) {}
             Log(std::ostream *out) : out(out), prefix("") {}
             Log(std::ostream *out, std::string prefix) : out(out), prefix(prefix) {}
+            bool enabled() {
+                return out != nullptr;
+            }
             template<typename T> Line operator<<(T t) {
                 if (!out) {
                     return Line(nullptr, std::ios_base::fmtflags());

@@ -204,17 +204,19 @@ namespace lc32sim {
     #pragma GCC diagnostic pop
 
     void Simulator::dump_state(Log &log) {
-        log << "    PC: "
-            << std::hex << std::setfill('0') << std::setw(8)
-            << this->pc;
-        log << "    CC: "
-            << (this->cond & 0b100 ? "n" : ".")
-            << (this->cond & 0b010 ? "z" : ".")
-            << (this->cond & 0b001 ? "p" : ".");
-
-        for (size_t i = 0; i < 8; i++)
-            log << "    R" << i << ": "
+        if (log.enabled()) {
+            log << "    PC: "
                 << std::hex << std::setfill('0') << std::setw(8)
-                << this->regs[i];
+                << this->pc;
+            log << "    CC: "
+                << (this->cond & 0b100 ? "n" : ".")
+                << (this->cond & 0b010 ? "z" : ".")
+                << (this->cond & 0b001 ? "p" : ".");
+
+            for (size_t i = 0; i < 8; i++)
+                log << "    R" << i << ": "
+                    << std::hex << std::setfill('0') << std::setw(8)
+                    << this->regs[i];
+        }
     }
 }
