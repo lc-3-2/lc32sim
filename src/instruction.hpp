@@ -109,7 +109,7 @@ namespace lc32sim {
             case InstructionType::LDB: stream << "LDB "; goto load;
             case InstructionType::LDH: stream << "LDH "; goto load;
             case InstructionType::LDW: stream << "LDW "; goto load;
-            case InstructionType::LEA: stream << "LEA " << +i.data.lea.dr << ", #" << +i.data.lea.pcoffset9; break;
+            case InstructionType::LEA: stream << "LEA R" << +i.data.lea.dr << ", #" << +i.data.lea.pcoffset9; break;
             case InstructionType::RTI: stream << "RTI"; break;
             case InstructionType::LSHF: stream << "LSHF "; goto shift;
             case InstructionType::RSHFL: stream << "RSHFL "; goto shift;

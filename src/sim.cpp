@@ -63,7 +63,7 @@ namespace lc32sim {
 
         // FETCH/DECODE
         i = Instruction(mem.read<uint16_t>(pc));
-        // logger.debug << "Executing instruction " << i;
+        logger.debug << "Executing instruction " << i << " @ x" << std::hex << std::setw(8) << std::setfill('0') << pc;
         pc += 2;
 
         // EXECUTE
@@ -197,8 +197,8 @@ namespace lc32sim {
         }
 
         // Print the state of the machine for debugging purposes
-        // logger.trace << "Machine state after " << i <<":";
-        // this->dump_state(logger.trace);
+        logger.trace << "Machine state after " << i <<":";
+        this->dump_state(logger.trace);
         return !this->halted;
     }
     #pragma GCC diagnostic pop
