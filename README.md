@@ -26,8 +26,8 @@ The simulator can be configured using a JSON config file. The default config fil
     "display": {
         "width": 640,
         "height": 480,
-        "hblank_length": 68,
         "vblank_length": 68,
+        "instructions_per_scanline": 400,
         "frames_per_second": 60.0,
         "accelerated_rendering": true
     },
@@ -35,6 +35,18 @@ The simulator can be configured using a JSON config file. The default config fil
         "allow_unaligned_access": false,
         "size": 4294967296,
         "simulator_page_size": 4096
+    },
+    "keybinds": {
+        "a": "A",
+        "b": "B",
+        "select": "Backspace",
+        "start": "Return",
+        "right": "Right",
+        "left": "Left",
+        "up": "Up",
+        "down": "Down",
+        "r": "R",
+        "l": "L"
     }
 }
 ```
