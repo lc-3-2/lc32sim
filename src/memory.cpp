@@ -59,6 +59,7 @@ namespace lc32sim {
     template<typename T> T Memory::read(uint32_t addr) {
         uint32_t page_num = addr / Config.memory.simulator_page_size;
         if constexpr (sizeof(T) > 1) {
+            #ifndef NO_UNALIGNED_ACCESS
             if (Config.memory.allow_unaligned_access) {
                 uint32_t end_page_num = (addr + sizeof(T) - 1) / Config.memory.simulator_page_size;
                 for (uint32_t page = page_num + 1; page <= end_page_num; page++) {
@@ -67,10 +68,13 @@ namespace lc32sim {
                     }
                 }
             } else {
+            #endif
                 if (addr % sizeof(T) != 0) {
                     throw UnalignedMemoryAccessException(addr, sizeof(T));
                 }
+            #ifndef NO_UNALIGNED_ACCESS
             }
+            #endif
         }
         if (!this->page_initialized[page_num]) {
             this->init_page(page_num);
@@ -86,6 +90,7 @@ namespace lc32sim {
     template <typename T> void Memory::write(uint32_t addr, T val) {
         uint32_t page_num = addr / Config.memory.simulator_page_size;
         if constexpr (sizeof(T) > 1) {
+            #ifndef NO_UNALIGNED_ACCESS
             if (Config.memory.allow_unaligned_access) {
                 uint32_t end_page_num = (addr + sizeof(T) - 1) / Config.memory.simulator_page_size;
                 for (uint32_t page = page_num + 1; page <= end_page_num; page++) {
@@ -94,10 +99,13 @@ namespace lc32sim {
                     }
                 }
             } else {
+            #endif
                 if (addr % sizeof(T) != 0) {
                     throw UnalignedMemoryAccessException(addr, sizeof(T));
                 }
+            #ifndef NO_UNALIGNED_ACCESS
             }
+            #endif
         }
         if (!this->page_initialized[page_num]) {
             this->init_page(page_num);
@@ -118,9 +126,15 @@ namespace lc32sim {
         }
 
         if constexpr (sizeof(T) > 1) {
-            if (addr % sizeof(T) != 0) {
-                throw UnalignedMemoryAccessException(addr, sizeof(T));
+            #ifndef NO_UNALIGNED_ACCESS
+            if (!Config.memory.allow_unaligned_access) {
+            #endif
+                if (addr % sizeof(T) != 0) {
+                    throw UnalignedMemoryAccessException(addr, sizeof(T));
+                }
+            #ifndef NO_UNALIGNED_ACCESS
             }
+            #endif
         }
 
         uint32_t page_num = addr / Config.memory.simulator_page_size;
