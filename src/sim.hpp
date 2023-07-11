@@ -4,7 +4,6 @@
 #include <thread>
 
 #include "config.hpp"
-#include "display.hpp"
 #include "memory.hpp"
 #include "log.hpp"
 
@@ -21,7 +20,6 @@ namespace lc32sim {
              */
             void dump_state(Log &log);
             void setcc(uint32_t val);
-            void simulate(Display *display);
         public:
             bool halted;
             uint32_t pc;

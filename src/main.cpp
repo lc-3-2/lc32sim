@@ -6,6 +6,7 @@
 #include <functional>
 #include <iostream>
 
+#include "display.hpp"
 #include "config.hpp"
 #include "elf_file.hpp"
 #include "instruction.hpp"
@@ -76,16 +77,8 @@ int main(int argc, char *argv[]) {
                     }
                 }
                 
-                if (!display.draw(scanline, sim.mem.get_video_buffer())) {
+                if (!display.update(scanline, sim)) {
                     goto done;
-                }
-                if (display.changed_key) {
-                    uint16_t &reg_keyinput = *sim.mem.get_reg_keyinput();
-                    if (display.changed_key->pressed) {
-                        reg_keyinput &= ~(1 << display.changed_key->map_location);
-                    } else {
-                        reg_keyinput |= (1 << display.changed_key->map_location);
-                    }
                 }
             }
             vsyncs++;

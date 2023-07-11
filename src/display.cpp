@@ -4,6 +4,7 @@
 #include "display.hpp"
 #include "exceptions.hpp"
 #include "log.hpp"
+#include "memory.hpp"
 
 namespace lc32sim {
     Display::Display() {
@@ -59,12 +60,12 @@ namespace lc32sim {
                 used_keys.insert(key.code);
             }
         }
-        key.pressed = false;
         key.map_location = map_location;
     }
 
-    bool Display::draw(unsigned int scanline, uint16_t *video_buffer) {
-        this->changed_key = nullptr;
+    bool Display::update(unsigned int scanline, Simulator &sim) {
+        uint16_t *video_buffer = sim.mem.get_video_buffer();
+        uint16_t *reg_keyinput = sim.mem.get_reg_keyinput();
         SDL_Event e;
         if (SDL_PollEvent(&e)) {
             if (e.type == SDL_QUIT) {
@@ -75,21 +76,28 @@ namespace lc32sim {
             } else if (e.type == SDL_KEYDOWN && e.key.repeat == 0) {
                 for (Keybind &key : this->keys) {
                     if (key.code == e.key.keysym.sym) {
-                        key.pressed = true;
-                        this->changed_key = &key;
+                        *reg_keyinput |= 1 << key.map_location;
                         break;
                     }
                 }
             } else if (e.type == SDL_KEYUP && e.key.repeat == 0) {
                 for (Keybind &key : this->keys) {
                     if (key.code == e.key.keysym.sym) {
-                        key.pressed = false;
-                        this->changed_key = &key;
+                        *reg_keyinput &= ~(1 << key.map_location);
                         break;
                     }
                 }
             }
         }
+        int num_keys, mouse_x, mouse_y;
+        const uint8_t *key_state = SDL_GetKeyboardState(&num_keys);
+        uint32_t mouse_buttons = SDL_GetMouseState(&mouse_x, &mouse_y);
+        sim.mem.write<uint32_t>(MOUSE_X_ADDR, static_cast<uint32_t>(mouse_x));
+        sim.mem.write<uint32_t>(MOUSE_Y_ADDR, static_cast<uint32_t>(mouse_y));
+        sim.mem.write<uint32_t>(MOUSE_BUTTONS_ADDR, mouse_buttons);
+        sim.mem.write<uint32_t>(KEYBOARD_NUM_KEYS_ADDR, static_cast<uint32_t>(num_keys));
+        sim.mem.write_array<uint8_t>(KEYBOARD_KEYS_ADDR, key_state, static_cast<uint32_t>(num_keys));
+
         if (scanline < Config.display.height) {
             SDL_Rect line = {0, static_cast<int>(scanline), static_cast<int>(Config.display.width), 1};
             SDL_UpdateTexture(this->texture, &line, video_buffer + scanline * Config.display.width, Config.display.width * sizeof(uint16_t));

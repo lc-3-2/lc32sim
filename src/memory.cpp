@@ -108,6 +108,36 @@ namespace lc32sim {
         *reinterpret_cast<T*>(&this->data[addr]) = val;
     }
 
+    template <typename T> void Memory::write_array(uint32_t addr, const T *arr, uint32_t len) {
+        uint32_t num_bytes = sizeof(T) * len;
+        if (Config.memory.size < num_bytes) {
+            throw SimulatorException("cannot write " + std::to_string(num_bytes) + " bytes to memory: memory size is " + std::to_string(Config.memory.size) + " bytes");
+        }
+        if ((Config.memory.size - num_bytes) < addr) {
+            throw SimulatorException("cannot write " + std::to_string(num_bytes) + " bytes to memory: address " + std::to_string(addr) + " is out of range");
+        }
+
+        if constexpr (sizeof(T) > 1) {
+            if (addr % sizeof(T) != 0) {
+                throw UnalignedMemoryAccessException(addr, sizeof(T));
+            }
+        }
+
+        uint32_t page_num = addr / Config.memory.simulator_page_size;
+        uint32_t end_page = (addr + num_bytes) / Config.memory.simulator_page_size;
+        for (uint32_t i = page_num; i <= end_page; i++) {
+            if (!this->page_initialized[i]) {
+                this->init_page(i);
+            }
+        }
+        if constexpr (endian::native == endian::big) {
+            for (uint32_t i = 0; i < len; i++) {
+                arr[i] = std::byteswap(arr[i]);
+            }
+        }
+        memcpy(&this->data[addr], arr, num_bytes);
+    }
+
     // Templates for read/write functions needed by other files
     template char Memory::read<char>(uint32_t addr);
     template uint8_t Memory::read<uint8_t>(uint32_t addr);
@@ -116,6 +146,7 @@ namespace lc32sim {
     template void Memory::write<uint8_t>(uint32_t addr, uint8_t val);
     template void Memory::write<uint16_t>(uint32_t addr, uint16_t val);
     template void Memory::write<uint32_t>(uint32_t addr, uint32_t val);
+    template void Memory::write_array<uint8_t>(uint32_t addr, const uint8_t *arr, uint32_t len);
 
     void Memory::load_elf(ELFFile& elf) {
         for (uint16_t i = 0; i < elf.get_header().phnum; i++) {

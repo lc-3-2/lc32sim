@@ -16,6 +16,13 @@ namespace lc32sim {
     const uint32_t DMA_CONTROLLER_ADDR = 0xF000000C;
     const uint32_t VIDEO_BUFFER_ADDR = 0xFC000000;
 
+    // Raw SDL keyboard/mouse input
+    const uint32_t MOUSE_X_ADDR = 0xF1000000;
+    const uint32_t MOUSE_Y_ADDR = 0xF1000004;
+    const uint32_t MOUSE_BUTTONS_ADDR = 0xF1000008;
+    const uint32_t KEYBOARD_NUM_KEYS_ADDR = 0xF100000C;
+    const uint32_t KEYBOARD_KEYS_ADDR = 0xF1000010;
+
     // LC-3 I/O Devices (not yet implemented, use TRAPs)
     const uint32_t KBSR_ADDR = 0xFFFFFE00;
     const uint32_t KBDR_ADDR = 0xFFFFFE02;
@@ -85,6 +92,7 @@ namespace lc32sim {
             void load_elf(ELFFile& elf);
             template<typename T> T read(uint32_t addr);
             template<typename T> void write(uint32_t addr, T val);
+            template<typename T> void write_array(uint32_t addr, const T *arr, uint32_t len);
 
             void set_vcount(uint16_t scanline);
             uint16_t *get_reg_keyinput();
