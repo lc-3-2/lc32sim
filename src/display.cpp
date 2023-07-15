@@ -27,7 +27,7 @@ namespace lc32sim {
             throw DisplayException("Renderer could not be created", SDL_GetError());
         }
 
-        this->texture = SDL_CreateTexture(this->renderer, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, Config.display.width, Config.display.height);
+        this->texture = SDL_CreateTexture(this->renderer, SDL_PIXELFORMAT_BGR565, SDL_TEXTUREACCESS_STREAMING, Config.display.width, Config.display.height);
         if (!this->texture) {
             throw DisplayException("Texture could not be created", SDL_GetError());
         }
@@ -89,6 +89,7 @@ namespace lc32sim {
                 }
             }
         }
+
         int num_keys, mouse_x, mouse_y;
         const uint8_t *key_state = SDL_GetKeyboardState(&num_keys);
         uint32_t mouse_buttons = SDL_GetMouseState(&mouse_x, &mouse_y);
