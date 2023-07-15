@@ -1,3 +1,4 @@
+#include <cassert>
 #include <cstdlib>
 #include <iostream>
 #include <unordered_map>
@@ -36,15 +37,8 @@ namespace lc32sim {
     }
 
     void Memory::init_page(uint32_t page_num) {
-        #ifdef DEBUG_CHECKS
-        if (page_num >= NUM_PAGES) {
-            throw SimulatorException("cannot initialize page " + std::to_string(page_num) + ": page_num out of range");
-        }
-        if (page_initialized[page_num]) {
-            throw SimulatorException("cannot initialize page " + std::to_string(page_num) + ": page already initialized");
-        }
-        #endif
-
+        assert(page_num < NUM_PAGES);
+        assert(!page_initialized[page_num]);
         srand(seed ^ page_num);
         for (uint64_t i = 0; i < Config.memory.simulator_page_size; i++) {
             uint64_t addr = (page_num * Config.memory.simulator_page_size) + i;

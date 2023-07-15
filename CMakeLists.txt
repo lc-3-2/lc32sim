@@ -68,8 +68,8 @@ set(FLAGS
 # Set for release and release with debug info configurations
 set(RELEASE_FLAGS
     -O3
-    -march=native
     -flto
+    -funroll-loops
     -DNDEBUG
 )
 # Set for debug and release with debug info configurations
@@ -78,8 +78,7 @@ set(DBGINFO_FLAGS
 )
 # Set for debug configuration only
 set(DEBUG_FLAGS
-    -O0
-    -DDEBUG_CHECKS # Enables sanity checks in the looped code that could degrade performance
+    -Og
 )
 add_executable(lc32sim ${SOURCES})
 target_compile_features(lc32sim PRIVATE cxx_std_23)
