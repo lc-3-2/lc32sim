@@ -27,7 +27,7 @@ namespace lc32sim {
             throw DisplayException("Renderer could not be created", SDL_GetError());
         }
 
-        this->texture = SDL_CreateTexture(this->renderer, SDL_PIXELFORMAT_BGR565, SDL_TEXTUREACCESS_STREAMING, Config.display.width, Config.display.height);
+        this->texture = SDL_CreateTexture(this->renderer, SDL_PIXELFORMAT_BGR555, SDL_TEXTUREACCESS_STREAMING, Config.display.width, Config.display.height);
         if (!this->texture) {
             throw DisplayException("Texture could not be created", SDL_GetError());
         }
