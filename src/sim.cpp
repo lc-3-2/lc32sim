@@ -63,7 +63,9 @@ namespace lc32sim {
 
         // FETCH/DECODE
         i = Instruction(mem.read<uint16_t>(pc));
-        logger.debug << "Executing instruction " << i << " @ x" << std::hex << std::setw(8) << std::setfill('0') << pc;
+        if (logger.debug.enabled()) {
+            logger.debug << "Executing instruction " << i << " @ x" << std::hex << std::setw(8) << std::setfill('0') << pc;
+        }
         pc += 2;
 
         // EXECUTE
@@ -175,9 +177,11 @@ namespace lc32sim {
                         // If the user tries to give control to the
                         // debugger, print a message and dump the state. It
                         // is *not* an error to execute this instruction.
-                        logger.info << "Encountered BREAK:";
-                        this->dump_state(logger.info);
-                        logger.info << "    Continuing execution...";
+                        if (logger.info.enabled()) {
+                            logger.info << "Encountered BREAK:";
+                            this->dump_state(logger.info);
+                            logger.info << "    Continuing execution...";
+                        }
                         break;
                     case TrapVector::CRASH:
                         // This should never happen. If it does, die
@@ -198,26 +202,27 @@ namespace lc32sim {
         this->mem.handle_dma();
 
         // Print the state of the machine for debugging purposes
-        logger.trace << "Machine state after " << i <<":";
-        this->dump_state(logger.trace);
+        if (logger.trace.enabled()) {
+            logger.trace << "Machine state after " << i <<":";
+            this->dump_state(logger.trace);
+        }
+
         return !this->halted;
     }
     #pragma GCC diagnostic pop
 
-    void Simulator::dump_state(Log &log) {
-        if (log.enabled()) {
-            log << "    PC: "
-                << std::hex << std::setfill('0') << std::setw(8)
-                << this->pc;
-            log << "    CC: "
-                << (this->cond & 0b100 ? "n" : ".")
-                << (this->cond & 0b010 ? "z" : ".")
-                << (this->cond & 0b001 ? "p" : ".");
+    inline void Simulator::dump_state(Log &log) {
+        log << "    PC: "
+            << std::hex << std::setfill('0') << std::setw(8)
+            << this->pc;
+        log << "    CC: "
+            << (this->cond & 0b100 ? "n" : ".")
+            << (this->cond & 0b010 ? "z" : ".")
+            << (this->cond & 0b001 ? "p" : ".");
 
-            for (size_t i = 0; i < 8; i++)
-                log << "    R" << i << ": "
-                    << std::hex << std::setfill('0') << std::setw(8)
-                    << this->regs[i];
-        }
+        for (size_t i = 0; i < 8; i++)
+            log << "    R" << i << ": "
+                << std::hex << std::setfill('0') << std::setw(8)
+                << this->regs[i];
     }
 }

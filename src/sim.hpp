@@ -18,7 +18,7 @@ namespace lc32sim {
              *
              * @param[in] log The log to dump to, like `logger.info`
              */
-            void dump_state(Log &log);
+            inline void dump_state(Log &log);
             void setcc(uint32_t val);
         public:
             bool halted;
