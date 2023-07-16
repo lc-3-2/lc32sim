@@ -67,10 +67,32 @@ set(FLAGS
 )
 # Set for release and release with debug info configurations
 set(RELEASE_FLAGS
-    -O3
-    -flto
+    -Ofast
+    -fassociative-math
+    -freciprocal-math
+    -fno-signed-zeros
+    -fno-trapping-math
+    -flto=auto
+    -fuse-linker-plugin
     -funroll-loops
+    -ffp-contract=fast
+    -fno-keep-static-consts
+    -fmerge-all-constants
+    -fmodulo-sched
+    -fmodulo-sched-allow-regmoves
+    -fgcse-sm
+    -fgcse-las
+    -fsched-spec-load
+    -fsched-spec-load-dangerous
+    -fsched2-use-superblocks
+    -fipa-pta
+    -ftree-loop-im
+    -ftree-loop-ivcanon
+    -fivopts
+    -fweb
+    -ftracer
     -DNDEBUG
+    -DNO_UNALIGNED_ACCESS
 )
 # Set for debug and release with debug info configurations
 set(DBGINFO_FLAGS

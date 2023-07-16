@@ -41,7 +41,7 @@ namespace lc32sim {
                     out->flags(flags);
                 }
             }
-            template<typename T> Line &operator<<(T t) {
+            template<typename T> inline Line &operator<<(const T& t) {
                 if (out) {
                     *out << t;
                 }
@@ -60,7 +60,7 @@ namespace lc32sim {
             bool enabled() {
                 return out != nullptr;
             }
-            template<typename T> Line operator<<(T t) {
+            template<typename T> inline Line operator<<(const T& t) {
                 if (!out) {
                     return Line(nullptr, std::ios_base::fmtflags());
                 }

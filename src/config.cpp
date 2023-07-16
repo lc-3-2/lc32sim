@@ -62,8 +62,8 @@ namespace lc32sim {
         #undef log_config
 
         #ifdef NO_UNALIGNED_ACCESS
-        if (this->memory.unaligned_access == true) {
-            logger.error << "Unaligned memory access is not supported on this build, but is enabled in the config."
+        if (this->memory.allow_unaligned_access == true) {
+            logger.error << "Unaligned memory access is not supported on this build, but is enabled in the config.";
         }
         #endif
     }
