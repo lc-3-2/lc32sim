@@ -294,16 +294,16 @@ namespace lc32sim {
 
             if ((cnt & DMA_WIDTH) == DMA_16) {
                 for (uint32_t i = 0; i < num_transfers; i++) {
-                    uint16_t &data = *reinterpret_cast<uint16_t*>(this->data[src]);
-                    *reinterpret_cast<uint16_t*>(this->data[dst]) = data;
+                    uint16_t &tmp = *reinterpret_cast<uint16_t*>(&this->data[src]);
+                    *reinterpret_cast<uint16_t*>(&this->data[dst]) = tmp;
 
                     src += source_increment;
                     dst += destination_increment;
                 }
             } else if ((cnt & DMA_WIDTH) == DMA_32) {
                 for (uint32_t i = 0; i < num_transfers; i++) {
-                    uint32_t &data = *reinterpret_cast<uint32_t*>(this->data[src]);
-                    *reinterpret_cast<uint32_t*>(this->data[dst]) = data;
+                    uint32_t &tmp = *reinterpret_cast<uint32_t*>(&this->data[src]);
+                    *reinterpret_cast<uint32_t*>(&this->data[dst]) = tmp;
 
                     src += source_increment;
                     dst += destination_increment;
@@ -311,6 +311,8 @@ namespace lc32sim {
             } else {
                 throw SimulatorException("DMA_WIDTH invalid");
             }
+
+            this->write<DMAController>(DMA_CONTROLLER_ADDR, DMAController());
         }
     }
 
