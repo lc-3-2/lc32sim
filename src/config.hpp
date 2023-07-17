@@ -31,7 +31,6 @@ namespace lc32sim {
             } display;
 
             struct {
-                bool allow_unaligned_access = false;
                 uint64_t size = (static_cast<uint64_t>(1) << 32);
                 /*
                  * The simulator page size is the allocation granularity for the simulator's memory.
@@ -64,7 +63,6 @@ namespace lc32sim {
         X(display.instructions_per_scanline, "Instructions per scanline") \
         X(display.frames_per_second, "Framerate (FPS)") \
         X(display.accelerated_rendering, "Hardware-accelerated rendering") \
-        X(memory.allow_unaligned_access, "Allow unaligned accesses") \
         X(memory.size, "Memory size") \
         X(memory.simulator_page_size, "Simulator page size") \
         X(keybinds.a, "\"A\" button keybind") \

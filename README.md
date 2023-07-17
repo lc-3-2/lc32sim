@@ -32,7 +32,6 @@ The simulator can be configured using a JSON config file. The default config fil
         "accelerated_rendering": true
     },
     "memory": {
-        "allow_unaligned_access": false,
         "size": 4294967296,
         "simulator_page_size": 4096
     },

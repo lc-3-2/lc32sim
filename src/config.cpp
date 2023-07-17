@@ -60,11 +60,5 @@ namespace lc32sim {
         #define log_config(name, description) logger.info << std::boolalpha << "    " << description << ": " << name;
         FOR_EACH_CONFIG_OPTION(log_config);
         #undef log_config
-
-        #ifdef NO_UNALIGNED_ACCESS
-        if (this->memory.allow_unaligned_access == true) {
-            logger.error << "Unaligned memory access is not supported on this build, but is enabled in the config.";
-        }
-        #endif
     }
 }

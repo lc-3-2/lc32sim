@@ -92,7 +92,6 @@ set(RELEASE_FLAGS
     -fweb
     -ftracer
     -DNDEBUG
-    -DNO_UNALIGNED_ACCESS
 )
 # Set for debug and release with debug info configurations
 set(DBGINFO_FLAGS
