@@ -41,29 +41,29 @@ namespace lc32sim {
 
     sim_size_t Filesystem::seek(sim_fd fd, sim_long offset, uint32_t whence) {
         if (fd == 0 || fd > file_table.size()) {
-            return 0;
+            return 2110;
         }
 
         File &f = file_table[fd - 1];
         if (!f.open) {
-            return 0;
+            return 2111;
         }
 
         return fseek(f.f, offset, whence);
     }
 
-    bool Filesystem::close(sim_fd fd) {
+    sim_int Filesystem::close(sim_fd fd) {
         if (fd == 0 || fd > file_table.size()) {
-            return false;
+            return EOF;
         }
 
         File &f = file_table[fd - 1];
         if (!f.open) {
-            return false;
+            return EOF;
         }
 
         fclose(f.f);
         f.open = false;
-        return true;
+        return 0;
     }
 }
