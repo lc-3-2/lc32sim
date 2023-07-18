@@ -1,5 +1,6 @@
 #include <cassert>
 #include <cstdlib>
+#include <ctime>
 #include <iostream>
 #include <unordered_map>
 
@@ -50,9 +51,10 @@ namespace lc32sim {
         page_initialized[page_num] = true;
     }
 
-    template<typename T> T Memory::read(uint32_t addr) {
+    template<typename T, bool internal>
+    T Memory::read(uint32_t addr) {
         uint32_t page_num = addr / Config.memory.simulator_page_size;
-        if constexpr (sizeof(T) > 1) {
+        if constexpr (!internal && (sizeof(T) > 1)) {
             if (addr % sizeof(T) != 0) {
                 throw UnalignedMemoryAccessException(addr, sizeof(T));
             }
@@ -60,6 +62,16 @@ namespace lc32sim {
         if (!this->page_initialized[page_num]) {
             this->init_page(page_num);
         }
+
+        if constexpr (!internal) {
+            if (addr >= IO_SPACE_START) {
+                using currtime_t = uint32_t;
+                if (REG_CURRTIME_ADDR <= addr && addr < REG_CURRTIME_ADDR + sizeof(currtime_t)) {
+                    this->write<currtime_t>(REG_CURRTIME_ADDR, static_cast<currtime_t>(std::time(0)));
+                }
+            }
+        }
+
         T ret = *reinterpret_cast<T*>(&this->data[addr]);
         if constexpr(sizeof(T) > 1 && endian::native == endian::big) {
             return std::byteswap(ret);
@@ -68,9 +80,10 @@ namespace lc32sim {
         }
     }
     
-    template <typename T> void Memory::write(uint32_t addr, T val) {
+    template <typename T, bool internal>
+    void Memory::write(uint32_t addr, T val) {
         uint32_t page_num = addr / Config.memory.simulator_page_size;
-        if constexpr (sizeof(T) > 1) {
+        if constexpr (!internal && (sizeof(T) > 1)) {
             if (addr % sizeof(T) != 0) {
                 throw UnalignedMemoryAccessException(addr, sizeof(T));
             }
@@ -78,13 +91,26 @@ namespace lc32sim {
         if (!this->page_initialized[page_num]) {
             this->init_page(page_num);
         }
+
         if constexpr (endian::native == endian::big) {
             val = std::byteswap(val);
         }
         *reinterpret_cast<T*>(&this->data[addr]) = val;
+
+        if constexpr (!internal) {
+            if (addr >= IO_SPACE_START) {
+                if (DMA_CONTROLLER_ADDR <= addr && addr < DMA_CONTROLLER_ADDR + sizeof(dma::DMAController)) {
+                    this->handle_dma();
+                }
+                if (FS_CONTROLLER_ADDR <= addr && addr < FS_CONTROLLER_ADDR + sizeof(fs::FSController)) {
+                    this->handle_fs();
+                }
+            }
+        }
     }
 
-    template <typename T> void Memory::write_array(uint32_t addr, const T *arr, uint32_t len) {
+    template <typename T, bool internal>
+    void Memory::write_array(uint32_t addr, const T *arr, uint32_t len) {
         uint32_t num_bytes = sizeof(T) * len;
         if (Config.memory.size < num_bytes) {
             throw SimulatorException("cannot write " + std::to_string(num_bytes) + " bytes to memory: memory size is " + std::to_string(Config.memory.size) + " bytes");
@@ -93,7 +119,7 @@ namespace lc32sim {
             throw SimulatorException("cannot write " + std::to_string(num_bytes) + " bytes to memory: address " + std::to_string(addr) + " is out of range");
         }
 
-        if constexpr (sizeof(T) > 1) {
+        if constexpr (!internal && (sizeof(T) > 1)) {
             if (addr % sizeof(T) != 0) {
                 throw UnalignedMemoryAccessException(addr, sizeof(T));
             }
@@ -152,11 +178,12 @@ namespace lc32sim {
 
     // Code for handling I/O devices
     void Memory::init_io_devices() {
-        this->write<uint16_t>(REG_VCOUNT_ADDR, 0);
-        this->write<uint16_t>(REG_KEYINPUT_ADDR, 0xFFFF);
-        this->write<dma::DMAController>(DMA_CONTROLLER_ADDR, dma::DMAController());
+        this->write<uint16_t, true>(REG_VCOUNT_ADDR, 0);
+        this->write<uint16_t, true>(REG_KEYINPUT_ADDR, 0xFFFF);
+        this->write<dma::DMAController, true>(DMA_CONTROLLER_ADDR, dma::DMAController());
+        this->write<fs::FSController, true>(FS_CONTROLLER_ADDR, fs::FSController());
         for (uint32_t pixel = 0; pixel < (Config.display.width * Config.display.height); pixel++) {
-            this->write<uint16_t>(VIDEO_BUFFER_ADDR + (pixel * 2), 0);
+            this->write<uint16_t, true>(VIDEO_BUFFER_ADDR + (pixel * 2), 0);
         }
     }
 
@@ -170,7 +197,7 @@ namespace lc32sim {
 
     void Memory::handle_dma() {
         using namespace lc32sim::dma;
-        DMAController dma = this->read<DMAController>(DMA_CONTROLLER_ADDR);
+        DMAController dma = this->read<DMAController, true>(DMA_CONTROLLER_ADDR);
         uint32_t &src = dma.source;
         uint32_t &dst = dma.destination;
         uint32_t &cnt = dma.control;
@@ -280,8 +307,41 @@ namespace lc32sim {
                 throw SimulatorException("DMA_WIDTH invalid");
             }
 
-            this->write<DMAController>(DMA_CONTROLLER_ADDR, DMAController());
+            this->write<DMAController, true>(DMA_CONTROLLER_ADDR, DMAController());
         }
+    }
+
+    void Memory::handle_fs() {
+        using namespace lc32sim::fs;
+        FSController con = this->read<FSController, true>(FS_CONTROLLER_ADDR);
+        if (con.mode != FS_OFF) {
+            const char *filename = reinterpret_cast<const char*>(&this->data[con.data1]);
+            const char *mode = reinterpret_cast<const char*>(&this->data[con.data2]);
+            void *ptr = reinterpret_cast<void*>(&this->data[con.data1]);
+            uint64_t offset = con.data2 | (static_cast<uint64_t>(con.data1) << 32);
+
+            switch (con.mode) {
+                case FS_OPEN:
+                    con.fd = fs.open(filename, mode);
+                    break;
+                case FS_CLOSE:
+                    con.data3 = fs.close(con.fd);
+                    break;
+                case FS_READ:
+                    con.data3 = fs.read(con.fd, ptr, con.data2, con.data3);
+                    break;
+                case FS_WRITE:
+                    con.data3 = fs.write(con.fd, ptr, con.data2, con.data3);
+                    break;
+                case FS_SEEK:
+                    con.data3 = fs.seek(con.fd, offset, con.data3);
+                    break;
+            }
+
+            con.mode = FS_OFF;
+            this->write<FSController, true>(FS_CONTROLLER_ADDR, con);
+        }
+
     }
 
     uint16_t *Memory::get_video_buffer() {

@@ -47,6 +47,7 @@ set(SOURCES
     src/config.cpp
     src/display.cpp
     src/elf_file.cpp
+    src/filesystem.cpp
     src/instruction.cpp
     src/log.cpp
     src/main.cpp

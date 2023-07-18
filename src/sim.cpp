@@ -199,7 +199,6 @@ namespace lc32sim {
                 throw SimulatorException("simulate(): unknown instruction type " + std::to_string(static_cast<std::underlying_type<InstructionType>::type>(i.type)));
                 break;
         }
-        this->mem.handle_dma();
 
         // Print the state of the machine for debugging purposes
         if (logger.trace.enabled()) {
