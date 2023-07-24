@@ -26,7 +26,7 @@ namespace lc32sim {
         }
 
         data = std::make_unique_for_overwrite<uint8_t[]>(Config.memory.size);
-        page_initialized = std::make_unique_for_overwrite<bool[]>(NUM_PAGES);
+        page_initialized = std::make_unique<bool[]>(NUM_PAGES);
         
         this->init_io_devices();
     };
