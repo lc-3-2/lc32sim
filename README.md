@@ -1,4 +1,5 @@
 # LC-3.2 Simulator
+A user-mode simulator of the LC-3.2 ISA, written in C++23. It can be used to run LC-3.2 binaries in either a graphical or a headless mode. To create such binaries, take a look at [lc-3-2/llvm](https://github.com/lc-3-2/llvm);
 
 ## Build and run:
 Build with CMake and Ninja:
