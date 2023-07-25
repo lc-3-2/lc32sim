@@ -235,7 +235,7 @@ namespace lc32sim {
                 logger.error << "IODevice " << dev.get_name() << " read-mapped to address x" << std::hex << std::setw(8) << std::setfill('0') << addr << " which is in supervisor space. Ignoring...";
 
             } else {
-                mem.add_pre_read_hook(addr, handler);
+                mem.add_read_hook(addr, handler);
             }
         }
         for (auto [addr, handler] : dev.get_write_handlers()) {
@@ -245,7 +245,7 @@ namespace lc32sim {
                 // This is a user-mode simulator, so we don't need to worry about supervisor-space I/O devices
                 logger.error << "IODevice " << dev.get_name() << " write-mapped to address x" << std::hex << std::setw(8) << std::setfill('0') << addr << " which is in supervisor space. Ignoring...";
             } else {
-                mem.add_pre_write_hook(addr, handler);
+                mem.add_write_hook(addr, handler);
             }
         }
     }

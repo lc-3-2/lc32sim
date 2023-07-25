@@ -33,10 +33,10 @@ namespace lc32sim {
             // IODevice methods
             std::string get_name() override { return "SDL2 Display"; };
             read_handlers get_read_handlers() override { return {
-                { REG_VCOUNT_ADDR, [this](uint32_t addr) -> uint32_t {
+                { REG_VCOUNT_ADDR, [this](uint32_t val) -> uint32_t {
                     return this->scanline;
                 }},
-                { REG_KEYINPUT_ADDR, [this](uint32_t addr) -> uint32_t {
+                { REG_KEYINPUT_ADDR, [this](uint32_t val) -> uint32_t {
                     uint32_t keyinput = 0;
                     const uint8_t *keystate = SDL_GetKeyboardState(nullptr);
                     for (size_t i = 0; i < NUM_KEYS; i++) {
@@ -45,10 +45,11 @@ namespace lc32sim {
                         }
                     }
                     return ~keyinput;
+                }},
+                { REG_CURRTIME_ADDR, [this](uint32_t val) -> uint32_t {
+                    auto tmp = SDL_GetTicks();
+                    return tmp;
                 }}
             };}
-            write_handlers get_write_handlers() override { return {}; };
-
-
     };
 }
