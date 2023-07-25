@@ -1,6 +1,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstdlib>
+#include <functional>
 #include <iostream>
 #include <iomanip>
 #include <termios.h>
@@ -48,7 +49,7 @@ namespace lc32sim {
         }
     }
 
-    void Simulator::setcc(uint32_t val) {
+    inline void Simulator::setcc(uint32_t val) {
         int32_t sval = static_cast<int32_t>(val);
         cond = (sval < 0) ? 0b100 : (sval == 0) ? 0b010 : 0b001;
     }
@@ -223,5 +224,34 @@ namespace lc32sim {
             log << "    R" << i << ": "
                 << std::hex << std::setfill('0') << std::setw(8)
                 << this->regs[i];
+    }
+    
+    void Simulator::register_io_device(IODevice &dev) {
+        for (auto [addr, handler] : dev.get_read_handlers()) {
+            if (addr < Config.memory.io_space_min) {
+                logger.error << "IODevice " << dev.get_name() << " read-mapped to address x" << std::hex << std::setw(8) << std::setfill('0') << addr << " which is not in I/O space. Ignoring...";
+            } else if (addr > Config.memory.user_space_max) {
+                // This is a user-mode simulator, so we don't need to worry about supervisor-space I/O devices
+                logger.error << "IODevice " << dev.get_name() << " read-mapped to address x" << std::hex << std::setw(8) << std::setfill('0') << addr << " which is in supervisor space. Ignoring...";
+
+            } else {
+                mem.add_pre_read_hook(addr, handler);
+            }
+        }
+        for (auto [addr, handler] : dev.get_write_handlers()) {
+            if (addr < Config.memory.io_space_min) {
+                logger.error << "IODevice " << dev.get_name() << " write-mapped to address x" << std::hex << std::setw(8) << std::setfill('0') << addr << " which is not in I/O space. Ignoring...";
+            } else if (addr > Config.memory.user_space_max) {
+                // This is a user-mode simulator, so we don't need to worry about supervisor-space I/O devices
+                logger.error << "IODevice " << dev.get_name() << " write-mapped to address x" << std::hex << std::setw(8) << std::setfill('0') << addr << " which is in supervisor space. Ignoring...";
+            } else {
+                mem.add_pre_write_hook(addr, handler);
+            }
+        }
+    }
+
+    void Simulator::register_io_device(IODevice *dev) {
+        io_devices.push_back(std::unique_ptr<IODevice>(dev));
+        this->register_io_device(*dev);
     }
 }

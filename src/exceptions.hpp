@@ -34,11 +34,6 @@ namespace lc32sim {
             DisplayException(std::string msg) : SimulatorException(msg) {}
             DisplayException(std::string msg, std::string msg2) : SimulatorException(msg + ": " + msg2) {}
     };
-    // class MalformedInstruction : public SimulatorException {
-    //     public:
-    //         MalformedInstruction(uint16_t instruction_bits, std::string msg) : SimulatorException(
-    //             "Malformed instruction (" + std::bitset<16>(instruction_bits).to_string() + "): " + msg) {}
-    // };
 
     /*!
      * \brief Thrown if we can't configure the terminal
@@ -54,6 +49,13 @@ namespace lc32sim {
             ) {}
             TerminalConfigurationException(std::string msg) : SimulatorException(
                 msg + std::strerror(errno)
+            ) {}
+    };
+
+    class SegmentationFaultException : public SimulatorException {
+        public:
+            SegmentationFaultException(uint32_t addr) : SimulatorException(
+                "Segmentation fault at address 0x" + int_to_hex(addr)
             ) {}
     };
 }

@@ -1,6 +1,8 @@
 #pragma once
 #include <cstdint>
 
+#define forceinline __attribute__((always_inline)) inline
+
 template<std::size_t from, std::size_t to>
 inline uint32_t sext(uint32_t val) {
     static_assert(from < to, "`from` must be less than to");
@@ -20,6 +22,9 @@ inline int32_t sext(int32_t val) {
     return *reinterpret_cast<int32_t*>(&result);
 }
 
-// suffix to convert to uint32_t
+// suffixes to convert literals to various fixed-width types
 constexpr std::uint32_t operator "" _u32(unsigned long long v)
 { return static_cast<std::uint32_t>(v); }
+
+constexpr std::uint64_t operator "" _u64(unsigned long long v)
+{ return static_cast<std::uint64_t>(v); }

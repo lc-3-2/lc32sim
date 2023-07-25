@@ -7,7 +7,7 @@
 #include "memory.hpp"
 
 namespace lc32sim {
-    Display::Display() {
+    Display::Display(uint16_t &scanline) : scanline(scanline) {
         this->ticks_per_frame = 1000.0 / Config.display.frames_per_second;
 
         int renderer_flags = Config.display.accelerated_rendering ? SDL_RENDERER_ACCELERATED : SDL_RENDERER_SOFTWARE;
@@ -36,20 +36,26 @@ namespace lc32sim {
         SDL_GetRendererOutputSize(this->renderer, &render_width, &render_height);
         SDL_RenderSetScale(renderer, render_width / Config.display.width, render_height / Config.display.height);
 
-        initialize_key(keys[0], Config.keybinds.a, 0);
-        initialize_key(keys[1], Config.keybinds.b, 1);
-        initialize_key(keys[2], Config.keybinds.select, 2);
-        initialize_key(keys[3], Config.keybinds.start, 3);
-        initialize_key(keys[4], Config.keybinds.right, 4);
-        initialize_key(keys[5], Config.keybinds.left, 5);
-        initialize_key(keys[6], Config.keybinds.up, 6);
-        initialize_key(keys[7], Config.keybinds.down, 7);
-        initialize_key(keys[8], Config.keybinds.r, 8);
-        initialize_key(keys[9], Config.keybinds.l, 9);
+        initialize_key(Config.keybinds.a, 0);
+        initialize_key(Config.keybinds.b, 1);
+        initialize_key(Config.keybinds.select, 2);
+        initialize_key(Config.keybinds.start, 3);
+        initialize_key(Config.keybinds.right, 4);
+        initialize_key(Config.keybinds.left, 5);
+        initialize_key(Config.keybinds.up, 6);
+        initialize_key(Config.keybinds.down, 7);
+        initialize_key(Config.keybinds.r, 8);
+        initialize_key(Config.keybinds.l, 9);
     }
 
-    void Display::initialize_key(Keybind &key, std::string key_name, int map_location) {
+    void Display::initialize_key(std::string key_name, size_t map_location) {
         static std::set<SDL_Keycode> used_keys;
+
+        if (map_location >= NUM_KEYS) {
+            throw SimulatorException("Cannot bind to key " + std::to_string(map_location) + " as there are only " + std::to_string(NUM_KEYS) + " keys");
+        }
+
+        Keybind &key = this->keys[map_location];
         key.code = SDL_GetKeyFromName(key_name.c_str());
         if (key.code == SDLK_UNKNOWN) {
             throw SimulatorException("Invalid keybind \"" + key_name + "\"");
@@ -63,9 +69,8 @@ namespace lc32sim {
         key.map_location = map_location;
     }
 
-    bool Display::update(unsigned int scanline, Simulator &sim) {
+    bool Display::update(Simulator &sim) {
         uint16_t *video_buffer = sim.mem.get_video_buffer();
-        uint16_t *reg_keyinput = sim.mem.get_reg_keyinput();
         SDL_Event e;
         if (SDL_PollEvent(&e)) {
             if (e.type == SDL_QUIT) {
@@ -73,31 +78,8 @@ namespace lc32sim {
                 SDL_DestroyWindow(this->window);
                 SDL_Quit();
                 return false;
-            } else if (e.type == SDL_KEYDOWN && e.key.repeat == 0) {
-                for (Keybind &key : this->keys) {
-                    if (key.code == e.key.keysym.sym) {
-                        *reg_keyinput |= 1 << key.map_location;
-                        break;
-                    }
-                }
-            } else if (e.type == SDL_KEYUP && e.key.repeat == 0) {
-                for (Keybind &key : this->keys) {
-                    if (key.code == e.key.keysym.sym) {
-                        *reg_keyinput &= ~(1 << key.map_location);
-                        break;
-                    }
-                }
             }
         }
-
-        int num_keys, mouse_x, mouse_y;
-        const uint8_t *key_state = SDL_GetKeyboardState(&num_keys);
-        uint32_t mouse_buttons = SDL_GetMouseState(&mouse_x, &mouse_y);
-        sim.mem.write<uint32_t>(MOUSE_X_ADDR, static_cast<uint32_t>(mouse_x));
-        sim.mem.write<uint32_t>(MOUSE_Y_ADDR, static_cast<uint32_t>(mouse_y));
-        sim.mem.write<uint32_t>(MOUSE_BUTTONS_ADDR, mouse_buttons);
-        sim.mem.write<uint32_t>(KEYBOARD_NUM_KEYS_ADDR, static_cast<uint32_t>(num_keys));
-        sim.mem.write_array<uint8_t>(KEYBOARD_KEYS_ADDR, key_state, static_cast<uint32_t>(num_keys));
 
         if (scanline < Config.display.height) {
             SDL_Rect line = {0, static_cast<int>(scanline), static_cast<int>(Config.display.width), 1};
