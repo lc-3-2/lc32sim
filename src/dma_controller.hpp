@@ -9,9 +9,7 @@ namespace lc32sim {
     class DMAController : public IODevice {
         private:
             Memory &mem;
-            uint32_t source;
-            uint32_t dest;
-            uint32_t control;
+            bool dma_on = false;
 
             static const uint32_t DMA_DESTINATION = 3_u32 << 21;
             static const uint32_t DMA_DESTINATION_INCREMENT = 0_u32 << 21;
@@ -41,12 +39,7 @@ namespace lc32sim {
 
             static const uint32_t DMA_NUM_TRANSFERS = 0xFFFF_u32;
 
-            forceinline void handle_dma() {
-                // Create copies to avoid modifying the original
-                uint32_t source = this->source;
-                uint32_t dest = this->dest;
-                uint32_t control = this->control;
-
+            forceinline void handle_dma(uint32_t source, uint32_t dest, uint32_t control) {
                 if ((control & DMA_TIMING) != DMA_NOW) {
                     throw SimulatorException("DMA timing besides DMA_NOW not implemented");
                 }
@@ -150,8 +143,6 @@ namespace lc32sim {
                 } else {
                     throw SimulatorException("DMA_WIDTH invalid");
                 }
-
-                this->control &= ~DMA_ON;
             }
 
         public:
@@ -161,33 +152,19 @@ namespace lc32sim {
                 return "DMA Controller";
             }
 
-            read_handlers get_read_handlers() override {
-                return {
-                    {DMA_CONTROLLER_ADDR, [this](uint32_t addr) -> uint32_t {
-                        return this->source;
-                    }},
-                    {DMA_CONTROLLER_ADDR + 4, [this](uint32_t addr) -> uint32_t {
-                        return this->dest;
-                    }},
-                    {DMA_CONTROLLER_ADDR + 8, [this](uint32_t addr) -> uint32_t {
-                        return this->control;
-                    }}
-                };
-            }
-
             write_handlers get_write_handlers() override {
                 return {
-                    {DMA_CONTROLLER_ADDR, [this](uint32_t addr, uint32_t value) {
-                        this->source = value;
-                    }},
-                    {DMA_CONTROLLER_ADDR + 4, [this](uint32_t addr, uint32_t value) {
-                        this->dest = value;
-                    }},
-                    {DMA_CONTROLLER_ADDR + 8, [this](uint32_t addr, uint32_t value) {
-                        this->control = value;
-                        if (this->control & DMA_ON) {
-                            handle_dma();
+                    {DMA_CONTROLLER_ADDR + 8, [this](uint32_t old_value, uint32_t value) {
+                        if ((value & DMA_ON) && !dma_on) {
+                            dma_on = true;
+                            uint32_t source = this->mem.read<uint32_t, true>(DMA_CONTROLLER_ADDR);
+                            uint32_t dest = this->mem.read<uint32_t, true>(DMA_CONTROLLER_ADDR + 4);
+
+                            handle_dma(source, dest, value);
+
+                            dma_on = false;
                         }
+                        return 0;
                     }}
                 };
             }

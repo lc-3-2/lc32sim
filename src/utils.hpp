@@ -1,4 +1,5 @@
 #pragma once
+#include <bit>
 #include <cstdint>
 
 #define forceinline __attribute__((always_inline)) inline
@@ -28,3 +29,29 @@ constexpr std::uint32_t operator "" _u32(unsigned long long v)
 
 constexpr std::uint64_t operator "" _u64(unsigned long long v)
 { return static_cast<std::uint64_t>(v); }
+
+// grabs the lower-memory-address half of a 32-bit value
+constexpr forceinline uint16_t first16(uint32_t val) {
+    if (std::endian::native == std::endian::little) {
+        return val & 0xFFFF;
+    } else {
+        return val >> 16;
+    }
+}
+
+// grabs the higher-memory-address half of a 32-bit value
+constexpr forceinline uint16_t second16(uint32_t val) {
+    if (std::endian::native == std::endian::little) {
+        return val >> 16;
+    } else {
+        return val & 0xFFFF;
+    }
+}
+
+constexpr forceinline uint32_t from16(uint16_t first, uint16_t second) {
+    if (std::endian::native == std::endian::little) {
+        return (static_cast<uint32_t>(second) << 16) | first;
+    } else {
+        return (static_cast<uint32_t>(first) << 16) | second;
+    }
+}

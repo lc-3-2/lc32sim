@@ -10,6 +10,7 @@
 #include "dma_controller.hpp"
 #include "config.hpp"
 #include "elf_file.hpp"
+#include "filesystem.hpp"
 #include "instruction.hpp"
 #include "log.hpp"
 #include "memory.hpp"
@@ -61,6 +62,7 @@ int main(int argc, char *argv[]) {
     uint64_t vsyncs = 0;
 
     sim.register_io_device(new lc32sim::DMAController(sim.mem));
+    sim.register_io_device(new lc32sim::Filesystem(sim.mem));
 
     if (headless) {
         while (sim.step()) {

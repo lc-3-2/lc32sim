@@ -12,7 +12,7 @@
 #define NUM_PAGES (((Config.memory.size - 1) / Config.memory.simulator_page_size) + 1)
 
 namespace lc32sim {
-    Memory::Memory(unsigned int seed) : seed(seed), pre_read_hooks(), pre_write_hooks() {
+    Memory::Memory(unsigned int seed) : seed(seed), read_hooks(), write_hooks() {
         if (Config.memory.size > (1_u64 << 32)) {
             throw SimulatorException("memory size must be <= 4 GiB");
         }
@@ -82,17 +82,17 @@ namespace lc32sim {
         }
     }
 
-    void Memory::add_pre_read_hook(uint32_t addr, std::function<uint32_t(uint32_t)> hook) {
-        if (this->pre_read_hooks.find(addr) != this->pre_read_hooks.end()) {
-            throw SimulatorException("pre-read hook already exists for address " + std::to_string(addr));
+    void Memory::add_read_hook(uint32_t addr, read_handler hook) {
+        if (this->read_hooks.find(addr) != this->read_hooks.end()) {
+            throw SimulatorException("read hook already exists for address " + std::to_string(addr));
         }
-        this->pre_read_hooks[addr] = hook;
+        this->read_hooks[addr] = hook;
     }
 
-    void Memory::add_pre_write_hook(uint32_t addr, std::function<void(uint32_t, uint32_t)> hook) {
-        if (this->pre_write_hooks.find(addr) != this->pre_write_hooks.end()) {
-            throw SimulatorException("pre-write hook already exists for address " + std::to_string(addr));
+    void Memory::add_write_hook(uint32_t addr, write_handler hook) {
+        if (this->write_hooks.find(addr) != this->write_hooks.end()) {
+            throw SimulatorException("write hook already exists for address " + std::to_string(addr));
         }
-        this->pre_write_hooks[addr] = hook;
+        this->write_hooks[addr] = hook;
     }
 }
