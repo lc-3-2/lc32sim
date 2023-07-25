@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include "display.hpp"
+#include "dma_controller.hpp"
 #include "config.hpp"
 #include "elf_file.hpp"
 #include "instruction.hpp"
@@ -57,8 +58,9 @@ int main(int argc, char *argv[]) {
     std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
     uint64_t instructions_executed = 0;
 
-    // todo remove
     uint64_t vsyncs = 0;
+
+    sim.register_io_device(new lc32sim::DMAController(sim.mem));
 
     if (headless) {
         while (sim.step()) {
@@ -66,10 +68,18 @@ int main(int argc, char *argv[]) {
         }
         instructions_executed++;
     } else {
-        lc32sim::Display display;
+        unsigned int scanline_max = Config.display.height + Config.display.vblank_length;
+        if (scanline_max > std::numeric_limits<uint16_t>().max()) {
+            logger.error << "Display height + vblank length exceeds range of uint16_t";
+            exit(1);
+        }
+        uint16_t scanline = 0;
+        lc32sim::Display display = lc32sim::Display(scanline);
+
+        sim.register_io_device(display);
+        
         while (true) {
-            for (unsigned int scanline = 0; scanline < Config.display.height + Config.display.vblank_length; scanline++) {
-                sim.mem.set_vcount(scanline);
+            for (scanline = 0; scanline < scanline_max; scanline++) {
                 for (unsigned int instruction = 0; instruction < Config.display.instructions_per_scanline; instruction++) {
                     instructions_executed++;
                     if (!sim.step()) {
@@ -77,7 +87,7 @@ int main(int argc, char *argv[]) {
                     }
                 }
                 
-                if (!display.update(scanline, sim)) {
+                if (!display.update(sim)) {
                     goto done;
                 }
             }

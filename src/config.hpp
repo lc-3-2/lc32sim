@@ -38,6 +38,20 @@ namespace lc32sim {
                  * This does not relate to any virtual memory systems in the simulated system.
                 */
                 uint64_t simulator_page_size = (static_cast<uint64_t>(1) << 12);
+
+                /*
+                * Some assumptions are made about the memory layout of the simulated system.
+                * In particular it is assumed that:
+                * (1) The beginning of memory contains supervisor-mode only code for the OS.
+                * (2) The end of memory contains memory addresses mapped for I/O devices.
+                * (3) The rest of memory is available for user programs.
+                * 
+                * User space and I/O space may overlap, allowing user-accessible MMIO devices.
+                * All addresses given below are inclusive. 
+                */
+                uint64_t user_space_min = 0x30000000;
+                uint64_t user_space_max = 0xFDFFFFFF                                                                                                                                        ;
+                uint64_t io_space_min = 0xF0000000;
             } memory;
 
             struct {
@@ -65,6 +79,8 @@ namespace lc32sim {
         X(display.accelerated_rendering, "Hardware-accelerated rendering") \
         X(memory.size, "Memory size") \
         X(memory.simulator_page_size, "Simulator page size") \
+        X(memory.user_space_min, "User space minimum address") \
+        X(memory.user_space_max, "User space maximum address") \
         X(keybinds.a, "\"A\" button keybind") \
         X(keybinds.b, "\"B\" button keybind") \
         X(keybinds.select, "\"Select\" button keybind") \

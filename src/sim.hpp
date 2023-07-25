@@ -4,6 +4,7 @@
 #include <thread>
 
 #include "config.hpp"
+#include "iodevice.hpp"
 #include "memory.hpp"
 #include "log.hpp"
 
@@ -19,7 +20,9 @@ namespace lc32sim {
              * @param[in] log The log to dump to, like `logger.info`
              */
             inline void dump_state(Log &log);
-            void setcc(uint32_t val);
+            inline void setcc(uint32_t val);
+
+            std::vector<std::unique_ptr<IODevice>> io_devices;
         public:
             bool halted;
             uint32_t pc;
@@ -34,5 +37,7 @@ namespace lc32sim {
             * \return Whether or not the program is still running
             */
             bool step() noexcept;
+            void register_io_device(IODevice &dev);
+            void register_io_device(IODevice *dev);
     };
 }
