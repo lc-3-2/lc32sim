@@ -27,9 +27,9 @@
     in {
 
       packages = rec {
-        default = lc-3-2;
+        default = lc32sim;
 
-        lc-3-2 = stdenv.mkDerivation {
+        lc32sim = stdenv.mkDerivation {
           inherit name buildInputs nativeBuildInputs propagatedBuildInputs;
 
           src = self;
