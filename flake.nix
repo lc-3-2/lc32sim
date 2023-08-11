@@ -35,13 +35,23 @@
           src = self;
 
           configurePhase = ''
+            runHook preConfigure
             cmake -G Ninja -B ./build/ -S . \
               -DCMAKE_INSTALL_PREFIX=$out -DCMAKE_BUILD_TYPE=Release \
               -DLC32SIM_SYSTEM_ARGPARSE=ON
+            runHook postConfigure
           '';
 
-          buildPhase = "ninja -v -C ./build/";
-          installPhase = "ninja -v -C ./build/ install";
+          buildPhase = ''
+            runHook preBuild
+            ninja -C ./build/
+            runHook postBuild
+          '';
+          installPhase = ''
+            runHook preInstall
+            ninja -C ./build/ install
+            runHook postInstall
+          ''
         };
       };
 
