@@ -13,7 +13,6 @@
       pkgs = nixpkgs-23-05.legacyPackages.${system};
       inherit (pkgs) stdenv;
 
-      buildInputs = [];
       nativeBuildInputs = [
         pkgs.cmake
         pkgs.ninja
@@ -30,28 +29,12 @@
         default = lc32sim;
 
         lc32sim = stdenv.mkDerivation {
-          inherit name buildInputs nativeBuildInputs propagatedBuildInputs;
-
+          inherit name nativeBuildInputs propagatedBuildInputs;
           src = self;
-
-          configurePhase = ''
-            runHook preConfigure
-            cmake -G Ninja -B ./build/ -S . \
-              -DCMAKE_INSTALL_PREFIX=$out -DCMAKE_BUILD_TYPE=Release \
-              -DLC32SIM_SYSTEM_ARGPARSE=ON
-            runHook postConfigure
-          '';
-
-          buildPhase = ''
-            runHook preBuild
-            ninja -v -C ./build/
-            runHook postBuild
-          '';
-          installPhase = ''
-            runHook preInstall
-            ninja -v -C ./build/ install
-            runHook postInstall
-          '';
+          cmakeFlags = [
+            "-DCMAKE_BUILD_TYPE=Release"
+            "-DLC32SIM_SYSTEM_ARGPARSE=ON"
+          ];
         };
       };
 
@@ -59,8 +42,7 @@
         default = lc32sim;
 
         lc32sim = pkgs.mkShell {
-          inherit name buildInputs nativeBuildInputs propagatedBuildInputs;
-
+          inherit name nativeBuildInputs propagatedBuildInputs;
           shellHook = ''
             export PS1="(${name}) [\u@\h \W]\$ "
           '';
