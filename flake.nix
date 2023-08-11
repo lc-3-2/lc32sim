@@ -31,10 +31,7 @@
         lc32sim = stdenv.mkDerivation {
           inherit name nativeBuildInputs propagatedBuildInputs;
           src = self;
-          cmakeFlags = [
-            "-DCMAKE_BUILD_TYPE=Release"
-            "-DLC32SIM_SYSTEM_ARGPARSE=ON"
-          ];
+          cmakeFlags = ["-DLC32SIM_SYSTEM_ARGPARSE=ON"];
         };
       };
 
