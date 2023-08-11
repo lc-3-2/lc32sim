@@ -44,14 +44,14 @@
 
           buildPhase = ''
             runHook preBuild
-            ninja -C ./build/
+            ninja -v -C ./build/
             runHook postBuild
           '';
           installPhase = ''
             runHook preInstall
-            ninja -C ./build/ install
+            ninja -v -C ./build/ install
             runHook postInstall
-          ''
+          '';
         };
       };
 
