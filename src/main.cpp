@@ -6,6 +6,7 @@
 #include <functional>
 #include <iostream>
 
+#include "clock.hpp"
 #include "display.hpp"
 #include "dma_controller.hpp"
 #include "config.hpp"
@@ -63,6 +64,7 @@ int main(int argc, char *argv[]) {
 
     sim.register_io_device(new lc32sim::DMAController(sim.mem));
     sim.register_io_device(new lc32sim::Filesystem(sim.mem));
+    sim.register_io_device(new lc32sim::Clock());
 
     if (headless) {
         while (sim.step()) {

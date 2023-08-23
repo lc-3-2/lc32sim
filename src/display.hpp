@@ -45,10 +45,6 @@ namespace lc32sim {
                         }
                     }
                     return ~keyinput;
-                }},
-                { REG_CURRTIME_ADDR, [this](uint32_t val) -> uint32_t {
-                    auto tmp = SDL_GetTicks();
-                    return tmp;
                 }}
             };}
     };
