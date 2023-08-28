@@ -13,6 +13,7 @@ namespace lc32sim {
     const uint32_t VIDEO_BUFFER_ADDR = 0xFC000000;
 
     // Others
+    const uint32_t REG_HIGHRESTIME_ADDR = 0xF0000014;
     const uint32_t REG_CURRTIME_ADDR = 0xF0000018;
     const uint32_t FS_CONTROLLER_ADDR = 0xF000001C;
 
