@@ -150,7 +150,7 @@ namespace lc32sim {
                 switch (i.data.trap.trapvect8) {
                     case TrapVector::GETC: {
                         char received;
-                        std::cin >> received;
+                        std::cin.get(received);
                         this->regs[0] = static_cast<uint32_t>(received & 0xff);
                         break;
                     }
@@ -225,7 +225,7 @@ namespace lc32sim {
                 << std::hex << std::setfill('0') << std::setw(8)
                 << this->regs[i];
     }
-    
+
     void Simulator::register_io_device(IODevice &dev) {
         for (auto [addr, handler] : dev.get_read_handlers()) {
             if (addr < Config.memory.io_space_min) {
