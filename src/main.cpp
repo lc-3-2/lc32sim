@@ -15,6 +15,7 @@
 #include "instruction.hpp"
 #include "log.hpp"
 #include "memory.hpp"
+#include "rng.hpp"
 #include "sim.hpp"
 
 using lc32sim::logger;
@@ -65,6 +66,7 @@ int main(int argc, char *argv[]) {
     sim.register_io_device(new lc32sim::DMAController(sim.mem));
     sim.register_io_device(new lc32sim::Filesystem(sim.mem));
     sim.register_io_device(new lc32sim::Clock());
+    sim.register_io_device(new lc32sim::RNG());
 
     if (headless) {
         while (sim.step()) {

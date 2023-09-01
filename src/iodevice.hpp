@@ -15,7 +15,14 @@ namespace lc32sim {
     // Others
     const uint32_t REG_HIGHRESTIME_ADDR = 0xF0000014;
     const uint32_t REG_CURRTIME_ADDR = 0xF0000018;
-    const uint32_t FS_CONTROLLER_ADDR = 0xF000001C;
+
+    // RNG Device
+    //
+    // Returns a random number on read
+    const uint32_t RNG_ADDR = 0xF000001C;
+
+    // Others
+    const uint32_t FS_CONTROLLER_ADDR = 0xF0000020;
 
     using read_handler = std::function<uint32_t(uint32_t)>;
     using write_handler = std::function<uint32_t(uint32_t, uint32_t)>;
