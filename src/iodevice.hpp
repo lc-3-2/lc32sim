@@ -12,12 +12,24 @@ namespace lc32sim {
     const uint32_t DMA_CONTROLLER_ADDR = 0xF000000C;
     const uint32_t VIDEO_BUFFER_ADDR = 0xFC000000;
 
-    // Others
-    const uint32_t REG_HIGHRESTIME_ADDR = 0xF0000014;
-    const uint32_t REG_CURRTIME_ADDR = 0xF0000018;
+    // Clock device
+    //
+    // Gets the current time on the host, in milliseconds, and exposes that to
+    // the simulator. Unfortunately, this information cannot be packed into 32
+    // bits, so we do the following.
+    //
+    // We have data registers for the number of seconds in the unix timestamp,
+    // and a separate register for milliseconds. These do not update on their
+    // own. Updates are triggered by writing to the status register.
+    //
+    // In the future, the status register may have flags. Thus, current
+    // applications should always write zero to the status register to trigger
+    // an update.
+    const uint32_t CLOCK_STATUS_ADDR = 0xF0000010;
+    const uint32_t CLOCK_MIL_ADDR = 0xF0000014;
+    const uint32_t CLOCK_SEC_ADDR = 0xF0000018;
 
     // RNG Device
-    //
     // Returns a random number on read
     const uint32_t RNG_ADDR = 0xF000001C;
 
