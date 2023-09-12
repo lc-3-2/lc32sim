@@ -155,19 +155,20 @@ namespace lc32sim {
                         break;
                     }
                     case TrapVector::OUT:
-                        std::cout << static_cast<char>(this->regs[0] & 0xff);
+                        std::cout << static_cast<char>(this->regs[0] & 0xff) << std::flush;
                         break;
                     case TrapVector::PUTS: {
                         char c;
                         for (uint32_t i = regs[0]; (c = mem.read<char>(i)) != '\0'; i++)
                             std::cout << c;
+                        std::cout << std::flush;
                         break;
                     }
                     case TrapVector::IN: {
                         char received;
                         std::cout << "> ";
-                        std::cin >> received;
-                        std::cout << received;
+                        std::cin.get(received);
+                        std::cout << received << std::endl;
                         this->regs[0] = static_cast<uint32_t>(received & 0xff);
                         break;
                     }
