@@ -52,6 +52,7 @@ set(SOURCES
     src/log.cpp
     src/main.cpp
     src/memory.cpp
+    src/input_queue.cpp
     src/sim.cpp
 )
 # Set for all configurations

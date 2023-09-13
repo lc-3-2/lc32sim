@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 #include "exceptions.hpp"
+#include "input_queue.hpp"
 #include "instruction.hpp"
 #include "log.hpp"
 #include "sim.hpp"
@@ -149,8 +150,7 @@ namespace lc32sim {
             case InstructionType::TRAP:
                 switch (i.data.trap.trapvect8) {
                     case TrapVector::GETC: {
-                        char received;
-                        std::cin.get(received);
+                        char received = StdInputQueue.poll();
                         this->regs[0] = static_cast<uint32_t>(received & 0xff);
                         break;
                     }
@@ -164,10 +164,9 @@ namespace lc32sim {
                         break;
                     }
                     case TrapVector::IN: {
-                        char received;
                         std::cout << "> ";
-                        std::cin >> received;
-                        std::cout << received;
+                        char received = StdInputQueue.poll();
+                        std::cout << received << std::endl;
                         this->regs[0] = static_cast<uint32_t>(received & 0xff);
                         break;
                     }
