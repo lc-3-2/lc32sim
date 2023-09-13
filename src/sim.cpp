@@ -15,7 +15,9 @@
 #include "utils.hpp"
 
 namespace lc32sim {
-    Simulator::Simulator(unsigned int seed) : halted(false), pc(0x30000000), mem() {
+    Simulator::Simulator(unsigned int seed) :
+        input_wait_type(NOT_WAITING), halted(false), pc(0x30000000), mem()
+    {
         std::srand(seed);
         this->cond = std::rand() & 0b111;
         for (size_t i = 0; i < sizeof(this->regs)/sizeof(this->regs[0]); i++) {
@@ -61,6 +63,26 @@ namespace lc32sim {
         Instruction i;
         if (this->halted) {
             throw SimulatorException("Simulator HALTed");
+        }
+
+        // If we are waiting on input, keep doing that. Wait until we get a
+        // value, then put it in R0, and mark that we can continue.
+        if (this->input_wait_type != NOT_WAITING) {
+            std::optional<char> received = StdInputQueue.try_poll();
+            if (received) {
+                if (logger.trace.enabled())
+                    logger.trace << "Got input";
+                // Populate the result and do what we have to do after
+                this->regs[0] = static_cast<uint32_t>(*received & 0xff);
+                if (this->input_wait_type == WAIT_IN)
+                    std::cout << *received << std::endl;
+                // Reset the wait state
+                this->input_wait_type = NOT_WAITING;
+            } else if (logger.trace.enabled()) {
+                logger.trace << "Still waiting";
+            }
+            // If we wait for input, that's all we do in that step
+            return !this->halted;
         }
 
         // FETCH/DECODE
@@ -149,11 +171,9 @@ namespace lc32sim {
                 break;
             case InstructionType::TRAP:
                 switch (i.data.trap.trapvect8) {
-                    case TrapVector::GETC: {
-                        char received = StdInputQueue.poll();
-                        this->regs[0] = static_cast<uint32_t>(received & 0xff);
+                    case TrapVector::GETC:
+                        this->input_wait_type = WAIT_GETC;
                         break;
-                    }
                     case TrapVector::OUT:
                         std::cout << static_cast<char>(this->regs[0] & 0xff);
                         break;
@@ -164,10 +184,8 @@ namespace lc32sim {
                         break;
                     }
                     case TrapVector::IN: {
-                        std::cout << "> ";
-                        char received = StdInputQueue.poll();
-                        std::cout << received << std::endl;
-                        this->regs[0] = static_cast<uint32_t>(received & 0xff);
+                        std::cout << "> " << std::flush;
+                        this->input_wait_type = WAIT_IN;
                         break;
                     }
                     case TrapVector::HALT:
@@ -204,6 +222,8 @@ namespace lc32sim {
         if (logger.trace.enabled()) {
             logger.trace << "Machine state after " << i <<":";
             this->dump_state(logger.trace);
+            if (this->input_wait_type != NOT_WAITING)
+                logger.trace << "    WILL WAIT FOR INPUT";
         }
 
         return !this->halted;
